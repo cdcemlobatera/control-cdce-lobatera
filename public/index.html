@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Instituciones | CDCE Lobatera</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f9f9f9;
+      color: #222;
+    }
+    form {
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
+    }
+    input, button {
+      padding: 6px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    #sugerencias div {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+    }
+    #sugerencias div:hover {
+      background: #f0f0f0;
+    }
+    .info-box {
+      background: #eef6f2;
+      padding: 8px;
+      border-left: 3px solid #4caf50;
+      margin-bottom: 10px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h2>📘 Registro de Instituciones Educativas CDCE Lobatera</h2>
+
+  <form id="formulario" onsubmit="event.preventDefault(); guardarInstitucion()">
+    <label for="codigodea">Código DEA:</label>
+    <input id="codigodea" required />
+
+    <label for="nombreplantel">Nombre del plantel:</label>
+    <input id="nombreplantel" required />
+
+    <label for="ceduladirector">Cédula del director:</label>
+    <input id="ceduladirector" onblur="buscarPorCedula()" required />
+
+    <label for="nombredirector">Nombre del director:</label>
+    <input id="nombredirector" readonly style="background-color: #f0f0f0;" />
+
+    <div id="info-director" class="info-box" style="display: none;"></div>
+
+    <label for="busqueda-nombre">Buscar director por nombre:</label>
+    <input id="busqueda-nombre" placeholder="Ej: Pedro González" oninput="buscarPorNombre(this.value)" />
+    <div id="sugerencias" style="border: 1px solid #ccc; max-height: 120px; overflow-y: auto;"></div><br>
+
+    <button type="submit">Registrar institución</button>
+  </form>
+
+  <script>
+    async function buscarPorCedula() {
+      const cedula = document.getElementById('ceduladirector').value.trim();
+      const info = document.getElementById('info-director');
+      const nombre = document.getElementById('nombredirector');
+      info.style.display = 'none';
+      info.innerHTML = '';
+      nombre.value = '';
+
+      if (!cedula) return;
+
+      const res = await fetch('/directores/cedula/' + cedula);
+      if (res.ok) {
+        const datos = await res.json();
+        nombre.value = datos.nombresapellidosrep || '';
+        info.innerHTML = `
+          📞 <strong>Tel:</strong> ${datos.telefono || '—'}<br>
+          ✉️ <strong>Correo:</strong> ${datos.correo || '—'}
+        `;
+        info.style.display = 'block';
+      } else {
+        info.innerHTML = `<em style="color:red;">Director no registrado</em>`;
+        info.style.display = 'block';
+      }
+    }
+
+    async function buscarPorNombre(valor) {
+      const lista = document.getElementById('sugerencias');
+      lista.innerHTML = '';
+      if (valor.trim().length < 2) return;
+
+      const res = await fetch('/directores/buscar?q=' + encodeURIComponent(valor));
+      if (!res.ok) return;
+
+      const datos = await res.json();
+      datos.forEach(d => {
+        const item = document.createElement('div');
+        item.textContent = `${d.nombresapellidosrep} (${d.cedula})`;
+        item.onclick = () => {
+          document.getElementById('ceduladirector').value = d.cedula;
+          document.getElementById('nombredirector').value = d.nombresapellidosrep;
+          document.getElementById('info-director').innerHTML = `
+            📞 <strong>Tel:</strong> ${d.telefono || '—'}<br>
+            ✉️ <strong>Correo:</strong> ${d.correo || '—'}
+          `;
+          document.getElementById('info-director').style.display = 'block';
+          lista.innerHTML = '';
+        };
+        lista.appendChild(item);
+      });
+    }
+
+    async function guardarInstitucion() {
+      const payload = {
+        codigodea: document.getElementById('codigodea').value.trim(),
+        nombreplantel: document.getElementById('nombreplantel').value.trim(),
+        ceduladirector: document.getElementById('ceduladirector').value.trim(),
+        status: 'activo',
+        registrado: 'oxiel'
+      };
+
+      const res = await fetch('/instituciones/nueva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('✅ Institución registrada con éxito');
+        document.getElementById('formulario').reset();
+        document.getElementById('nombredirector').value = '';
+        document.getElementById('info-director').innerHTML = '';
+        document.getElementById('info-director').style.display = 'none';
+        document.getElementById('sugerencias').innerHTML = '';
+      } else {
+        alert('❌ Error al registrar institución');
+      }
+    }
+  </script>
+</body>
+</html>
