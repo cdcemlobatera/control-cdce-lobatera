@@ -23,55 +23,56 @@
 <div id="sugerencias" style="border: 1px solid #ccc; max-height: 120px; overflow-y: auto;"></div><br>
 
 <script>
-    async function buscarPorCedula() {
-      const cedula = document.getElementById('ceduladirector').value.trim();
-      const info = document.getElementById('info-director');
-      const nombre = document.getElementById('nombredirector');
-      info.innerHTML = '';
-      nombre.value = '';
-  
-      if (!cedula) return;
-  
-      const res = await fetch('/directores/cedula/' + cedula);
-      if (res.ok) {
-        const datos = await res.json();
-        nombre.value = datos.nombresapellidosrep || '';
-        info.innerHTML = `
-          📞 <strong>Tel:</strong> ${datos.telefono || '—'}<br>
-          ✉️ <strong>Correo:</strong> ${datos.correo || '—'}
-        `;
-      } else {
-        info.innerHTML = `<em style="color: red;">Director no registrado</em>`;
-      }
-    }
-  
-    async function buscarPorNombre(valor) {
-      const lista = document.getElementById('sugerencias');
-      lista.innerHTML = '';
-      if (valor.trim().length < 2) return;
-  
-      const res = await fetch('/directores/buscar?q=' + encodeURIComponent(valor));
-      if (!res.ok) return;
-  
-      const datos = await res.json();
-      datos.forEach(d => {
-        const item = document.createElement('div');
-        item.textContent = `${d.nombresapellidosrep} (${d.cedula})`;
-        item.style.padding = '5px';
-        item.style.cursor = 'pointer';
-        item.style.borderBottom = '1px solid #eee';
-        item.onclick = () => {
-          document.getElementById('ceduladirector').value = d.cedula;
-          document.getElementById('nombredirector').value = d.nombresapellidosrep;
-          document.getElementById('info-director').innerHTML = `
-            📞 <strong>Tel:</strong> ${d.telefono || '—'}<br>
-            ✉️ <strong>Correo:</strong> ${d.correo || '—'}
+      async function buscarPorCedula() {
+        const cedula = document.getElementById('ceduladirector').value.trim();
+        const info = document.getElementById('info-director');
+        const nombre = document.getElementById('nombredirector');
+        info.innerHTML = '';
+        nombre.value = '';
+    
+        if (!cedula) return;
+    
+        const res = await fetch('/directores/cedula/' + cedula);
+        if (res.ok) {
+          const datos = await res.json();
+          nombre.value = datos.nombresapellidosrep || '';
+          info.innerHTML = `
+            📞 <strong>Tel:</strong> ${datos.telefono || '—'}<br>
+            ✉️ <strong>Correo:</strong> ${datos.correo || '—'}
           `;
-          lista.innerHTML = '';
-        };
-        lista.appendChild(item);
-      });
-    }
+        } else {
+          info.innerHTML = `<em style="color: red;">Director no registrado</em>`;
+        }
+      }
+    
+      async function buscarPorNombre(valor) {
+        const lista = document.getElementById('sugerencias');
+        lista.innerHTML = '';
+        if (valor.trim().length < 2) return;
+    
+        const res = await fetch('/directores/buscar?q=' + encodeURIComponent(valor));
+        if (!res.ok) return;
+    
+        const datos = await res.json();
+        datos.forEach(d => {
+          const item = document.createElement('div');
+          item.textContent = `${d.nombresapellidosrep} (${d.cedula})`;
+          item.style.padding = '5px';
+          item.style.cursor = 'pointer';
+          item.style.borderBottom = '1px solid #eee';
+          item.onclick = () => {
+            document.getElementById('ceduladirector').value = d.cedula;
+            document.getElementById('nombredirector').value = d.nombresapellidosrep;
+            document.getElementById('info-director').innerHTML = `
+              📞 <strong>Tel:</strong> ${d.telefono || '—'}<br>
+              ✉️ <strong>Correo:</strong> ${d.correo || '—'}
+            `;
+            lista.innerHTML = '';
+          };
+          lista.appendChild(item);
+        });
+      }
+
     
     async function guardarInstitucion() {
       const payload = {
