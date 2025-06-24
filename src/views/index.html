@@ -4,6 +4,25 @@
   <meta charset="UTF-8" />
   <title>Instituciones Registradas</title>
   <script>
+
+
+<!-- Cédula del director -->
+<label for="ceduladirector">Cédula del director:</label><br>
+<input id="ceduladirector" onblur="buscarPorCedula()" /><br><br>
+
+<!-- Nombre del director (solo lectura) -->
+<label for="nombredirector">Nombre del director:</label><br>
+<input id="nombredirector" readonly style="background-color: #f0f0f0;" /><br><br>
+
+<!-- Info adicional del director -->
+<div id="info-director" style="margin-bottom: 1em; color: #333;"></div>
+
+<!-- Búsqueda por nombre -->
+<label for="busqueda-nombre">Buscar director por nombre:</label><br>
+<input id="busqueda-nombre" placeholder="Escribe para buscar..." oninput="buscarPorNombre(this.value)" />
+<div id="sugerencias" style="border: 1px solid #ccc; max-height: 120px; overflow-y: auto;"></div><br>
+
+<script>
     async function buscarPorCedula() {
       const cedula = document.getElementById('ceduladirector').value.trim();
       const info = document.getElementById('info-director');
@@ -16,7 +35,7 @@
       const res = await fetch('/directores/cedula/' + cedula);
       if (res.ok) {
         const datos = await res.json();
-        nombre.value = datos.nombre || '';
+        nombre.value = datos.nombresapellidosrep || '';
         info.innerHTML = `
           📞 <strong>Tel:</strong> ${datos.telefono || '—'}<br>
           ✉️ <strong>Correo:</strong> ${datos.correo || '—'}
@@ -37,13 +56,13 @@
       const datos = await res.json();
       datos.forEach(d => {
         const item = document.createElement('div');
+        item.textContent = `${d.nombresapellidosrep} (${d.cedula})`;
         item.style.padding = '5px';
         item.style.cursor = 'pointer';
         item.style.borderBottom = '1px solid #eee';
-        item.textContent = `${d.nombre} (${d.cedula})`;
         item.onclick = () => {
           document.getElementById('ceduladirector').value = d.cedula;
-          document.getElementById('nombredirector').value = d.nombre;
+          document.getElementById('nombredirector').value = d.nombresapellidosrep;
           document.getElementById('info-director').innerHTML = `
             📞 <strong>Tel:</strong> ${d.telefono || '—'}<br>
             ✉️ <strong>Correo:</strong> ${d.correo || '—'}
@@ -53,7 +72,7 @@
         lista.appendChild(item);
       });
     }
-  
+    
     async function guardarInstitucion() {
       const payload = {
         codigodea: document.getElementById('codigodea').value.trim(),
@@ -115,20 +134,20 @@
 
   <!-- Cédula del director -->
   <label for="ceduladirector">Cédula del director:</label><br>
-  <input id="ceduladirector" onblur="buscarPorCedula()" required /><br><br>
-
+  <input id="ceduladirector" onblur="buscarPorCedula()" /><br><br>
+  
   <!-- Nombre del director (solo lectura) -->
   <label for="nombredirector">Nombre del director:</label><br>
   <input id="nombredirector" readonly style="background-color: #f0f0f0;" /><br><br>
-
-  <!-- Información adicional -->
-  <div id="info-director" style="color: #333; margin-bottom: 1em;"></div>
-
+  
+  <!-- Info adicional del director -->
+  <div id="info-director" style="margin-bottom: 1em; color: #333;"></div>
+  
   <!-- Búsqueda por nombre -->
   <label for="busqueda-nombre">Buscar director por nombre:</label><br>
   <input id="busqueda-nombre" placeholder="Escribe para buscar..." oninput="buscarPorNombre(this.value)" />
   <div id="sugerencias" style="border: 1px solid #ccc; max-height: 120px; overflow-y: auto;"></div><br>
-
+    
   <button type="submit">Registrar institución</button>
 </form>
 </body>
