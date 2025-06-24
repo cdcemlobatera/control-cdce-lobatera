@@ -2,10 +2,93 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>CDCE Lobatera – Bienvenido</title>
+  <title>Instituciones Registradas</title>
+  <script>
+    async function cargarInstituciones() {
+      const res = await fetch('/instituciones');
+      const data = await res.json();
+      const cuerpo = document.getElementById('tabla-instituciones');
+      cuerpo.innerHTML = '';
+
+      data.forEach(inst => {
+        const row = `<tr>
+          <td>${inst.codigodea}</td>
+          <td>${inst.nombreplantel || ''}</td>
+          <td>${inst.ceduladirector || ''}</td>
+          <td>${inst.status || ''}</td>
+        </tr>`;
+        cuerpo.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    async function buscarDirectores(valor) {
+      const res = await fetch('/directores/buscar?q=' + encodeURIComponent(valor));
+      const lista = await res.json();
+      const desplegable = document.getElementById('sugerencias');
+      desplegable.innerHTML = '';
+      lista.forEach(d => {
+        const item = document.createElement('div');
+        item.textContent = d.nombre + ' (' + d.cedula + ')';
+        item.onclick = () => {
+          document.getElementById('ceduladirector').value = d.cedula;
+          desplegable.innerHTML = '';
+        };
+        desplegable.appendChild(item);
+      });
+    }
+
+    async function guardarInstitucion() {
+      const payload = {
+        codigodea: document.getElementById('codigodea').value,
+        nombreplantel: document.getElementById('nombreplantel').value,
+        ceduladirector: document.getElementById('ceduladirector').value,
+        status: 'activo',
+        registrado: 'oxiel'
+      };
+
+      const res = await fetch('/instituciones/nueva', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        document.getElementById('formulario').reset();
+        cargarInstituciones();
+      }
+    }
+
+    window.onload = cargarInstituciones;
+  </script>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    #sugerencias div { background: #eee; padding: 5px; cursor: pointer; }
+    #sugerencias div:hover { background: #ddd; }
+  </style>
 </head>
 <body>
-  <h1>📘 Sistema educativo en construcción</h1>
-  <p>Próximamente verás instituciones aquí...</p>
+  <h2>📘 Instituciones registradas</h2>
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Código DEA</th>
+        <th>Nombre</th>
+        <th>Director</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-instituciones"></tbody>
+  </table>
+
+  <hr>
+  <h3>➕ Agregar institución</h3>
+  <form id="formulario" onsubmit="event.preventDefault(); guardarInstitucion()">
+    <input id="codigodea" placeholder="Código DEA" required /><br><br>
+    <input id="nombreplantel" placeholder="Nombre del plantel" required /><br><br>
+    <input id="ceduladirector" placeholder="Cédula del director" required />
+    <input type="text" placeholder="Buscar nombre..." oninput="buscarDirectores(this.value)" />
+    <div id="sugerencias"></div><br><br>
+    <button type="submit">Registrar</button>
+  </form>
 </body>
 </html>
