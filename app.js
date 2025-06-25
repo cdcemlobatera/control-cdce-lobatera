@@ -16,6 +16,10 @@ const bcrypt = require('bcryptjs');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
 // Buscar director por cédula
 app.get('/directores/cedula/:cedula', async (req, res) => {
   const { cedula } = req.params;
