@@ -210,6 +210,18 @@ app.get('/usuario/activo', (req, res) => {
   });
 });
 
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const { cedula } = req.params;
+  const { data, error } = await supabase
+    .from('raclobatera')
+    .select('nombresapellidosrep, telefono, correo')
+    .eq('cedula', cedula)
+    .single();
+
+  if (error || !data) return res.status(404).json({ error: 'Director no encontrado' });
+  res.json(data);
+});
+
 // Cerrar sesión
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
