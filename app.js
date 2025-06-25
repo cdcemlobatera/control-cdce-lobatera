@@ -218,7 +218,6 @@ app.get('/instituciones/listar', async (req, res) => {
         telefono: director?.telefono || 'No disponible'
       };
     }));
-}
 
   res.json(resultados);
 });
