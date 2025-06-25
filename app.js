@@ -183,3 +183,42 @@ app.get('/instituciones/listar', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
+
+app.get('/instituciones/listar', async (req, res) => {
+    const { data: instituciones, error: errorInstituciones } = await supabase
+      .from('instituciones')
+      .select('codigodea, nombreplantel, ceduladirector, status');
+  
+    if (errorInstituciones) {
+      return res.status(500).json({ error: 'Error al cargar instituciones' });
+    }
+  
+    // Enriquecer cada institución con nombre y teléfono del director
+app.get('/instituciones/listar', async (req, res) => {
+  const { data: instituciones, error: errorInstituciones } = await supabase
+    .from('instituciones')
+    .select('codigodea, nombreplantel, ceduladirector, status');
+
+  if (errorInstituciones) {
+    return res.status(500).json({ error: 'Error al cargar instituciones' });
+  }
+
+  // Enriquecer cada institución con nombre y teléfono del director
+  const resultados = await Promise.all(
+    instituciones.map(async inst => {
+      const { data: director } = await supabase
+        .from('raclobatera')
+        .select('nombresapellidosrep, telefono')
+        .eq('cedula', inst.ceduladirector)
+        .single();
+
+      return {
+        ...inst,
+        nombredirector: director?.nombresapellidosrep || 'Sin registrar',
+        telefono: director?.telefono || 'No disponible'
+      };
+    })
+  );
+
+  res.json(resultados);
+});
