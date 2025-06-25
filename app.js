@@ -126,6 +126,13 @@ app.post('/usuarios/nuevo', async (req, res) => {
     return res.status(403).json({ error: 'La cédula no pertenece al personal registrado en el RAC Lobatera' });
   }
 
+app.post('/usuarios/nuevo', async (req, res) => {
+  const { cedula, clave, rol } = req.body;
+
+  if (!cedula || !clave || !rol) {
+    return res.status(400).json({ error: 'Faltan datos requeridos' });
+  }
+
   // Verificar si ya está registrado como usuario
   const { data: existente } = await supabase
     .from('usuarios')
@@ -149,7 +156,7 @@ app.post('/usuarios/nuevo', async (req, res) => {
 
   res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
 });
-
+  
 // validacion roles en panel 
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
