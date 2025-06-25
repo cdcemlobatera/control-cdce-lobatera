@@ -176,40 +176,34 @@ app.post('/usuarios/nuevo', async (req, res) => {
 
 //listar instituciones (tabla)
 app.get('/instituciones/listar', async (req, res) => {
-  const { data, error } = await supabase
+  const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
     .select('codigodea, nombreplantel, ceduladirector, status');
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-// Ruta protegida para servir el panel
-app.get('/panel', (req, res) => {
-  if (!req.session || !req.session.rol) {
-    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  if (errorInstituciones) {
+    return res.status(500).json({ error: 'Error al cargar instituciones' });
   }
-  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
-});
 
-// Ruta raíz para mostrar login
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
+  const resultados = await Promise.all(
+    instituciones.map(async inst => {
+      const { data: director } = await supabase
+        .from('raclobatera')
+        .select('nombresapellidosrep, telefono')
+        .eq('cedula', inst.ceduladirector)
+        .single();
 
-// Obtener datos del usuario activo desde sesión
-app.get('/usuario/activo', (req, res) => {
-  res.json({
-    cedula: req.session?.cedula || null,
-    rol: req.session?.rol || null
-  });
-});
+      return {
+        codigodea: inst.codigodea,
+        nombreplantel: inst.nombreplantel,
+        ceduladirector: inst.ceduladirector,
+        status: inst.status,
+        nombredirector: director?.nombresapellidosrep || 'Sin registrar',
+        telefono: director?.telefono || 'No disponible'
+      };
+    })
+  );
 
-// Cerrar sesión
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/login.html');
-  });
+  res.json(resultados);
 });
 
 // Escuchar el puerto al final de todo
