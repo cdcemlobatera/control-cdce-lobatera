@@ -174,7 +174,7 @@ app.post('/usuarios/nuevo', async (req, res) => {
   res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
 });
 
-/lista instituciones (tabla)
+//listar instituciones (tabla)
 app.get('/instituciones/listar', async (req, res) => {
   const { data, error } = await supabase
     .from('instituciones')
