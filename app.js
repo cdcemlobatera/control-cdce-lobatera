@@ -223,5 +223,6 @@ app.get('/logout', (req, res) => {
 
 // Escuchar el puerto al final de todo
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  //console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor activo en puerto ${PORT}`);
 });
