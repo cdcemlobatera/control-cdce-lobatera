@@ -176,9 +176,6 @@ app.post('/usuarios/nuevo', async (req, res) => {
 
 //listar instituciones (tabla)
 app.get('/instituciones/listar', async (req, res) => {
-  const { data: instituciones, error: errorInstituciones } = await supabase
-    .from('instituciones')
-    .select('codigodea, nombreplantel, ceduladirector, status');
 
   if (errorInstituciones) {
     return res.status(500).json({ error: 'Error al cargar instituciones' });
@@ -201,7 +198,7 @@ app.get('/instituciones/listar', async (req, res) => {
         telefono: director?.telefono || 'No disponible'
       };
     }));
-  );
+});
 
   res.json(resultados);
 });
