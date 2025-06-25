@@ -149,3 +149,35 @@ app.post('/usuarios/nuevo', async (req, res) => {
 
   res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
 });
+
+// validacion roles en panel 
+app.post('/login', async (req, res) => {
+  const { cedula, clave } = req.body;
+
+  if (!cedula || !clave) {
+    return res.status(400).json({ error: 'Datos incompletos' });
+  }
+
+  // Consultar en Supabase
+  const { data: usuarios, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('cedula', cedula)
+    .single();
+
+  if (error || !usuarios) {
+    return res.status(401).json({ error: 'Cédula no registrada' });
+  }
+
+  const coincideClave = await bcrypt.compare(clave, usuarios.clave_hash);
+
+  if (!coincideClave) {
+    return res.status(401).json({ error: 'Clave incorrecta' });
+  }
+
+  // Guardar en sesión
+  req.session.cedula = usuarios.cedula;
+  req.session.rol = usuarios.rol;
+
+  res.status(200).json({ mensaje: 'Inicio de sesión exitoso', redirigirA: '/panel' });
+});
