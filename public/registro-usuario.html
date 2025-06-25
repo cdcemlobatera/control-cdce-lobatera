@@ -49,7 +49,10 @@
     <h3>➕ Registrar nuevo usuario</h3>
 
     <label for="cedula">Cédula:</label>
-    <input id="cedula" required />
+    <input id="cedula" onblur="buscarNombre()" required />
+
+    <label for="nombre">Nombre:</label>
+    <input id="nombre" readonly style="background-color: #f0f0f0;" />
 
     <label for="clave">Clave:</label>
     <input id="clave" type="password" required />
@@ -70,6 +73,22 @@
   </form>
 
   <script>
+    async function buscarNombre() {
+      const cedula = document.getElementById('cedula').value.trim();
+      const nombre = document.getElementById('nombre');
+      nombre.value = '';
+
+      if (!cedula) return;
+
+      const res = await fetch('/directores/cedula/' + cedula);
+      if (res.ok) {
+        const datos = await res.json();
+        nombre.value = datos.nombresapellidosrep || '';
+      } else {
+        nombre.value = 'No encontrado';
+      }
+    }
+
     async function registrarUsuario() {
       const cedula = document.getElementById('cedula').value.trim();
       const clave = document.getElementById('clave').value;
@@ -94,6 +113,7 @@
         mensaje.textContent = '✅ Usuario registrado exitosamente.';
         mensaje.style.color = 'green';
         document.getElementById('registro-form').reset();
+        document.getElementById('nombre').value = '';
       } else {
         const err = await res.json();
         mensaje.textContent = `❌ ${err.error || 'Error al registrar usuario'}`;
