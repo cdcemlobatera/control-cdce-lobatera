@@ -64,7 +64,7 @@ app.post('/login', async (req, res) => {
     mensaje: 'Acceso correcto',
     rol: usuario.rol,
     redirigirA: '/panel'
-  }  
+  });
 });
 
 
