@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Instituciones</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      padding: 1rem 2rem;
+    }
+    h1 {
+      color: #004080;
+    }
+    button {
+      margin-bottom: 1rem;
+      background-color: #004080;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #e6f0ff;
+    }
+    tbody tr:hover {
+      background-color: #f0f8ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Instituciones Registradas</h1>
+
+  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Código DEA</th>
+        <th>Nombre</th>
+        <th>Director</th>
+        <th>Status</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaInstituciones">
+      <tr><td colspan="5">Cargando...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function cargarInstituciones() {
+      const res = await fetch('/instituciones/listar');
+      const data = await res.json();
+      const cuerpo = document.getElementById('tablaInstituciones');
+
+      if (!data || data.length === 0) {
+        cuerpo.innerHTML = '<tr><td colspan="5">No hay instituciones registradas.</td></tr>';
+        return;
+      }
+
+      cuerpo.innerHTML = data.map(inst => `
+        <tr>
+          <td>${inst.codigodea}</td>
+          <td>${inst.nombreplantel}</td>
+          <td>${inst.ceduladirector}</td>
+          <td>${inst.status}</td>
+          <td>
+            <button onclick="editar('${inst.codigodea}')">✏️</button>
+            <button onclick="eliminar('${inst.codigodea}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function abrirFormulario() {
+      alert("Aquí iría el formulario para registrar una nueva institución (¡próximo paso!)");
+    }
+
+    function editar(codigodea) {
+      alert("Pronto podrás editar: " + codigodea);
+    }
+
+    function eliminar(codigodea) {
+      alert("Confirmar eliminación de: " + codigodea);
+    }
+
+    cargarInstituciones();
+  </script>
+</body>
+</html>
