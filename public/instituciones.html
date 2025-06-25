@@ -40,8 +40,6 @@
 <body>
   <h1>Instituciones Registradas</h1>
 
-  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
-
   <table>
     <thead>
       <tr>
@@ -59,6 +57,7 @@
   </table>
 
   //Formulario de Registro
+  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
   <form id="formInstitucion">
     <label>Código DEA:</label>
     <input type="text" name="codigodea" required />
@@ -116,8 +115,6 @@
     <input type="hidden" name="registrado" />
     <button type="submit">Registrar</button>
   </form>
-
-  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
 
   <script>
     function abrirFormulario() {
