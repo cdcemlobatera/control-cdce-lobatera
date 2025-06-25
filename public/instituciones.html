@@ -58,7 +58,72 @@
     </tbody>
   </table>
 
+  //Formulario de Registro
+  <form id="formInstitucion">
+    <label>Código DEA:</label>
+    <input type="text" name="codigodea" required />
+  
+    <label>Nombre del Plantel:</label>
+    <input type="text" name="nombreplantel" required />
+  
+    <label>Código de Dependencia:</label>
+    <input type="text" name="codigodep" />
+  
+    <label>Dependencia:</label>
+    <select name="dependencia" required>
+      <option value="">Seleccione</option>
+      <option value="Nacional">Nacional</option>
+      <option value="Estadal">Estadal</option>
+      <option value="Municipal">Municipal</option>
+      <option value="Privada">Privada</option>
+    </select>
+  
+    <label>Nivel Educativo:</label>
+    <select name="niveledu" required>
+      <option value="">Seleccione</option>
+      <option value="Maternal">Maternal</option>
+      <option value="Inicial">Inicial</option>
+      <option value="Maternal Inicial">Maternal Inicial</option>
+      <option value="Primaria">Primaria</option>
+      <option value="Inicial Primaria">Inicial Primaria</option>
+      <option value="Media General">Media General</option>
+      <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+    </select>
+  
+    <label>Parroquia:</label>
+    <input type="text" name="parroquia" />
+  
+    <label>Cédula del Director:</label>
+    <input type="text" name="ceduladirector" onblur="buscarDirector()" required />
+  
+    <div id="infoDirector" style="margin-bottom: 1rem;">
+      <label>Nombres y Apellidos:</label>
+      <input type="text" id="nombredirector" readonly />
+  
+      <label>Teléfono:</label>
+      <input type="text" id="telefonodirector" readonly />
+  
+      <label>Correo:</label>
+      <input type="text" id="correodirector" readonly />
+    </div>
+  
+    <label>Status:</label>
+    <select name="status">
+      <option value="Activo">Activo</option>
+      <option value="Inactivo">Inactivo</option>
+    </select>
+  
+    <input type="hidden" name="registrado" />
+    <button type="submit">Registrar</button>
+  </form>
+
+  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
+
   <script>
+    function abrirFormulario() {
+      document.getElementById('modalRegistro').style.display = 'block';
+    }
+
     async function cargarInstituciones() {
       const res = await fetch('/instituciones/listar');
       const data = await res.json();
