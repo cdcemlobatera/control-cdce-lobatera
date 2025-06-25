@@ -34,7 +34,6 @@ app.get('/', (req, res) => {
 // 🛠️ Aquí puedes continuar agregando tus otras rutas (login, panel, etc.)
 
 // Login
-
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
 
@@ -61,10 +60,11 @@ app.post('/login', async (req, res) => {
   req.session.cedula = cedula;
   req.session.rol = usuario.rol;
 
-res.json({
-  mensaje: 'Acceso correcto',
-  rol: usuario.rol,
-  redirigirA: '/panel'
+  res.json({
+    mensaje: 'Acceso correcto',
+    rol: usuario.rol,
+    redirigirA: '/panel'
+  }  
 });
 
 
