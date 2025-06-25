@@ -16,6 +16,13 @@ const session = require('express-session');
 
 app.use(express.json());
 
+// Asegurar la clave...
+app.use(session({
+  secret: 'mi-clave-segura', // Puedes cambiar esta cadena
+  resave: false,
+  saveUninitialized: true
+}));
+
 //app.use(express.static(path.join(__dirname, 'public')));
 
 //app.get('/', (req, res) => {
@@ -30,13 +37,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 }); 
-
-// Asegurar la clave...
-app.use(session({
-  secret: 'mi-clave-segura', // Puedes cambiar esta cadena
-  resave: false,
-  saveUninitialized: true
-}));
 
 // Login
 
