@@ -16,27 +16,18 @@ const session = require('express-session');
 
 app.use(express.json());
 
-// Asegurar la clave...
+// Asegurar la clave...app.use(express.json());
 app.use(session({
-  secret: 'mi-clave-segura', // Puedes cambiar esta cadena
+  secret: 'mi-clave-segura',
   resave: false,
   saveUninitialized: true
 }));
-
-//app.use(express.static(path.join(__dirname, 'public')));
-
-//app.get('/', (req, res) => {
-//  if (req.session && req.session.rol) {
-//    return res.redirect('/panel');
-//  }
-//  res.redirect('/login.html');
-//});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
   res.redirect('/login.html');
-}); 
+});
 
 // Login
 
