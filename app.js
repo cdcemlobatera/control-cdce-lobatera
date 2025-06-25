@@ -55,3 +55,48 @@ app.post('/instituciones/nueva', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
+// Nuevo Usuario
+const bcrypt = require('bcryptjs');
+
+app.post('/usuarios/nuevo', async (req, res) => {
+  const { cedula, clave, rol } = req.body;
+
+  if (!cedula || !clave || !rol) {
+    return res.status(400).json({ error: 'Campos incompletos' });
+  }
+
+  // Verificar en raclobatera si pertenece al personal del Ministerio
+  const { data: persona, error: errorPersona } = await supabase
+    .from('raclobatera')
+    .select('nombresapellidosrep')
+    .eq('cedula', cedula)
+    .single();
+
+  if (errorPersona || !persona) {
+    return res.status(403).json({ error: 'La cédula no pertenece al personal registrado en el RAC Lobatera' });
+  }
+
+  // Verificar si ya está registrado como usuario
+  const { data: existente } = await supabase
+    .from('usuarios')
+    .select('cedula')
+    .eq('cedula', cedula)
+    .single();
+
+  if (existente) {
+    return res.status(409).json({ error: 'El usuario ya existe' });
+  }
+
+  const claveEncriptada = await bcrypt.hash(clave, 10);
+
+  const { error: insertError } = await supabase
+    .from('usuarios')
+    .insert([{ cedula, clave: claveEncriptada, rol }]);
+
+  if (insertError) {
+    return res.status(500).json({ error: 'Error al registrar usuario' });
+  }
+
+  res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
+});
