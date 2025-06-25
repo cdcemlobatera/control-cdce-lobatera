@@ -115,7 +115,8 @@ app.post('/usuarios/nuevo', async (req, res) => {
     return res.status(400).json({ error: 'Campos incompletos' });
   }
 
-  // Verificar en raclobatera si pertenece al personal del Ministerio
+  // Verificar si pertenece al personal del Ministerio (tabla raclobatera)
+  
   const { data: persona, error: errorPersona } = await supabase
     .from('raclobatera')
     .select('nombresapellidosrep')
@@ -126,14 +127,8 @@ app.post('/usuarios/nuevo', async (req, res) => {
     return res.status(403).json({ error: 'La cédula no pertenece al personal registrado en el RAC Lobatera' });
   }
 
-app.post('/usuarios/nuevo', async (req, res) => {
-  const { cedula, clave, rol } = req.body;
-
-  if (!cedula || !clave || !rol) {
-    return res.status(400).json({ error: 'Faltan datos requeridos' });
-  }
-
   // Verificar si ya está registrado como usuario
+  
   const { data: existente } = await supabase
     .from('usuarios')
     .select('cedula')
@@ -144,6 +139,7 @@ app.post('/usuarios/nuevo', async (req, res) => {
     return res.status(409).json({ error: 'El usuario ya existe' });
   }
 
+  // Encriptar clave y guardar
   const claveEncriptada = await bcrypt.hash(clave, 10);
 
   const { error: insertError } = await supabase
@@ -155,36 +151,4 @@ app.post('/usuarios/nuevo', async (req, res) => {
   }
 
   res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
-});
-  
-// validacion roles en panel 
-app.post('/login', async (req, res) => {
-  const { cedula, clave } = req.body;
-
-  if (!cedula || !clave) {
-    return res.status(400).json({ error: 'Datos incompletos' });
-  }
-
-  // Consultar en Supabase
-  const { data: usuarios, error } = await supabase
-    .from('usuarios')
-    .select('*')
-    .eq('cedula', cedula)
-    .single();
-
-  if (error || !usuarios) {
-    return res.status(401).json({ error: 'Cédula no registrada' });
-  }
-
-  const coincideClave = await bcrypt.compare(clave, usuarios.clave_hash);
-
-  if (!coincideClave) {
-    return res.status(401).json({ error: 'Clave incorrecta' });
-  }
-
-  // Guardar en sesión
-  req.session.cedula = usuarios.cedula;
-  req.session.rol = usuarios.rol;
-
-  res.status(200).json({ mensaje: 'Inicio de sesión exitoso', redirigirA: '/panel' });
 });
