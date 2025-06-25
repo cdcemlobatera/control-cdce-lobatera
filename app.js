@@ -27,6 +27,12 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 📄 Respuesta directa al ingresar por "/"
+// Ruta raíz para mostrar el login
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Acceso al panel según sesión
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
     return res.sendFile(path.join(__dirname, 'public', 'login.html'));
