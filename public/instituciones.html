@@ -117,10 +117,6 @@
   </form>
 
   <script>
-    function abrirFormulario() {
-      document.getElementById('modalRegistro').style.display = 'block';
-    }
-
     async function cargarInstituciones() {
       const res = await fetch('/instituciones/listar');
       const data = await res.json();
@@ -146,8 +142,12 @@
       `).join('');
     }
 
+    //function abrirFormulario() {
+    //  alert("Aquí iría el formulario para registrar una nueva institución (¡próximo paso!)");
+    //}
+
     function abrirFormulario() {
-      alert("Aquí iría el formulario para registrar una nueva institución (¡próximo paso!)");
+      document.getElementById('modalRegistro').style.display = 'block';
     }
 
     function editar(codigodea) {
