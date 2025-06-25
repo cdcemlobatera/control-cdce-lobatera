@@ -200,7 +200,7 @@ app.get('/instituciones/listar', async (req, res) => {
         nombredirector: director?.nombresapellidosrep || 'Sin registrar',
         telefono: director?.telefono || 'No disponible'
       };
-    });
+    }));
   );
 
   res.json(resultados);
