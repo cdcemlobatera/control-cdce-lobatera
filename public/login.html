@@ -100,6 +100,28 @@
         mensaje.textContent = '❌ Cédula o clave incorrecta.';
       }
     }
+
+    const formulario = document.getElementById('login-form');
+    formulario.addEventListener('submit', async (e) => {
+      e.preventDefault();
+  
+      const cedula = document.getElementById('cedula').value;
+      const clave = document.getElementById('clave').value;
+  
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ cedula, clave })
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        window.location.href = data.redirigirA;
+      } else {
+        alert(data.error || 'Error al iniciar sesión');
+      }
+    });  
   </script>
 </body>
 </html>
