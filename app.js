@@ -110,10 +110,6 @@ app.post('/instituciones/nueva', async (req, res) => {
   res.status(201).json({ mensaje: 'Institución registrada' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
-
 // Nuevo Usuario
 app.post('/usuarios/nuevo', async (req, res) => {
   const { cedula, clave, rol } = req.body;
@@ -221,14 +217,12 @@ app.get('/logout', (req, res) => {
   });
 });
 
-// Escuchar el puerto al final de todo
-//app.listen(PORT, () => {
-  //console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  //console.log(`Servidor activo en puerto ${PORT}`);
+//const server = app.listen(PORT, () => {
+//  console.log(`Servidor corriendo en puerto ${PORT}`);
 //});
 
-const server = app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
 server.on('error', err => {
