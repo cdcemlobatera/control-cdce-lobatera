@@ -77,6 +77,14 @@ app.post('/login', async (req, res) => {
   });
 });
 
+//usuario activo
+app.get('/usuario/activo', (req, res) => {
+  res.json({
+    cedula: req.session?.cedula,
+    rol: req.session?.rol
+  });
+});
+
 
 // Buscar director por cédula
 app.get('/directores/cedula/:cedula', async (req, res) => {
