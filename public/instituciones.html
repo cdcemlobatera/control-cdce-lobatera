@@ -56,66 +56,125 @@
     </tbody>
   </table>
 
-  //Formulario de Registro
-  <button onclick="abrirFormulario()">➕ Registrar nueva institución</button>
-  <form id="formInstitucion">
-    <label>Código DEA:</label>
-    <input type="text" name="codigodea" required />
+    
+  <!-- 🔽 Botón para abrir modal -->
+  <button onclick="abrirFormulario()" style="margin-top: 1rem;">➕ Registrar nueva institución</button>
   
-    <label>Nombre del Plantel:</label>
-    <input type="text" name="nombreplantel" required />
+  <!-- 📦 Modal del formulario -->
+  <div id="modalRegistro" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:1.5rem; box-shadow:0 0 10px #aaa; max-width:600px; width:90%; z-index:999;">
+    <h2>Registrar Nueva Institución</h2>
+    <form id="formInstitucion">
+      <fieldset style="margin-bottom:1rem;">
+        <legend>Datos del Plantel</legend>
   
-    <label>Código de Dependencia:</label>
-    <input type="text" name="codigodep" />
+        <label>Código DEA:</label><br>
+        <input type="text" name="codigodea" required><br><br>
   
-    <label>Dependencia:</label>
-    <select name="dependencia" required>
-      <option value="">Seleccione</option>
-      <option value="Nacional">Nacional</option>
-      <option value="Estadal">Estadal</option>
-      <option value="Municipal">Municipal</option>
-      <option value="Privada">Privada</option>
-    </select>
+        <label>Nombre del Plantel:</label><br>
+        <input type="text" name="nombreplantel" required><br><br>
   
-    <label>Nivel Educativo:</label>
-    <select name="niveledu" required>
-      <option value="">Seleccione</option>
-      <option value="Maternal">Maternal</option>
-      <option value="Inicial">Inicial</option>
-      <option value="Maternal Inicial">Maternal Inicial</option>
-      <option value="Primaria">Primaria</option>
-      <option value="Inicial Primaria">Inicial Primaria</option>
-      <option value="Media General">Media General</option>
-      <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
-    </select>
+        <label>Código de Dependencia:</label><br>
+        <input type="text" name="codigodep"><br><br>
   
-    <label>Parroquia:</label>
-    <input type="text" name="parroquia" />
+        <label>Dependencia:</label><br>
+        <select name="dependencia" required>
+          <option value="">Seleccione</option>
+          <option value="Nacional">Nacional</option>
+          <option value="Estadal">Estadal</option>
+          <option value="Municipal">Municipal</option>
+          <option value="Privada">Privada</option>
+        </select><br><br>
   
-    <label>Cédula del Director:</label>
-    <input type="text" name="ceduladirector" onblur="buscarDirector()" required />
+        <label>Nivel Educativo:</label><br>
+        <select name="niveledu" required>
+          <option value="">Seleccione</option>
+          <option value="Maternal">Maternal</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Maternal Inicial">Maternal Inicial</option>
+          <option value="Primaria">Primaria</option>
+          <option value="Inicial Primaria">Inicial Primaria</option>
+          <option value="Media General">Media General</option>
+          <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+        </select><br><br>
   
-    <div id="infoDirector" style="margin-bottom: 1rem;">
-      <label>Nombres y Apellidos:</label>
-      <input type="text" id="nombredirector" readonly />
+        <label>Parroquia:</label><br>
+        <input type="text" name="parroquia"><br><br>
+      </fieldset>
   
-      <label>Teléfono:</label>
-      <input type="text" id="telefonodirector" readonly />
+      <fieldset>
+        <legend>Datos del Director</legend>
   
-      <label>Correo:</label>
-      <input type="text" id="correodirector" readonly />
-    </div>
+        <label>Cédula del Director:</label><br>
+        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()" onblur="buscarDirector()" list="listaDirectores" required autocomplete="off"><br>
+        <datalist id="listaDirectores"></datalist><br>
   
-    <label>Status:</label>
-    <select name="status">
-      <option value="Activo">Activo</option>
-      <option value="Inactivo">Inactivo</option>
-    </select>
+        <label>Nombres y Apellidos:</label><br>
+        <input type="text" id="nombredirector" readonly><br><br>
   
-    <input type="hidden" name="registrado" />
-    <button type="submit">Registrar</button>
-  </form>
+        <label>Teléfono:</label><br>
+        <input type="text" id="telefonodirector" readonly><br><br>
+  
+        <label>Correo:</label><br>
+        <input type="text" id="correodirector" readonly><br><br>
+      </fieldset>
+  
+      <label>Status:</label><br>
+      <select name="status">
+        <option value="Activo">Activo</option>
+        <option value="Inactivo">Inactivo</option>
+      </select><br><br>
+  
+      <input type="hidden" name="registrado" value="">
+  
+      <button type="submit">Guardar Institución</button>
+      <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
+    </form>
+  </div>
 
+  <script>
+function abrirFormulario() {
+  document.getElementById('modalRegistro').style.display = 'block';
+}
+
+function cerrarFormulario() {
+  document.getElementById('modalRegistro').style.display = 'none';
+}
+
+async function buscarDirector() {
+  const cedula = document.getElementById('ceduladirector').value.trim();
+  if (!cedula) return;
+
+  const res = await fetch(`/directores/cedula/${cedula}`);
+  if (res.ok) {
+    const data = await res.json();
+    document.getElementById('nombredirector').value = data.nombresapellidosrep || '';
+    document.getElementById('telefonodirector').value = data.telefono || '';
+    document.getElementById('correodirector').value = data.correo || '';
+  } else {
+    document.getElementById('nombredirector').value = '';
+    document.getElementById('telefonodirector').value = '';
+    document.getElementById('correodirector').value = '';
+  }
+}
+
+async function sugerirDirector() {
+  const input = document.getElementById('ceduladirector');
+  const texto = input.value.trim();
+  const datalist = document.getElementById('listaDirectores');
+  if (texto.length < 3) return datalist.innerHTML = '';
+
+  const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+  const data = await res.json();
+
+  datalist.innerHTML = '';
+  data.forEach(d => {
+    const option = document.createElement('option');
+    option.value = d.cedula;
+    datalist.appendChild(option);
+  });
+}
+</script>
+  
   <script>
     async function cargarInstituciones() {
       const res = await fetch('/instituciones/listar');
