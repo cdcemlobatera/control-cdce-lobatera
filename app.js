@@ -27,9 +27,13 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 📄 Respuesta directa al ingresar por "/"
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.get('/panel', (req, res) => {
+  if (!req.session || !req.session.rol) {
+    return res.redirect('/login.html'); // Evita acceso sin sesión
+  }
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
+
 
 // 🛠️ Aquí puedes continuar agregando tus otras rutas (login, panel, etc.)
 
