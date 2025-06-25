@@ -30,6 +30,37 @@ app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
+// Login
+
+app.post('/login', async (req, res) => {
+  const { cedula, clave } = req.body;
+
+  if (!cedula || !clave) {
+    return res.status(400).json({ error: 'Datos incompletos' });
+  }
+
+  const { data: usuario, error } = await supabase
+    .from('usuarios')
+    .select('clave, rol')
+    .eq('cedula', cedula)
+    .single();
+
+  if (error || !usuario) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+
+  const claveOk = await bcrypt.compare(clave, usuario.clave);
+  if (!claveOk) {
+    return res.status(401).json({ error: 'Credenciales inválidas' });
+  }
+
+  // Guardamos datos en sesión
+  req.session.cedula = cedula;
+  req.session.rol = usuario.rol;
+
+  res.json({ mensaje: 'Acceso correcto', rol: usuario.rol });
+});
+
 
 // Buscar director por cédula
 app.get('/directores/cedula/:cedula', async (req, res) => {
@@ -114,35 +145,4 @@ app.post('/usuarios/nuevo', async (req, res) => {
   }
 
   res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
-});
-
-// Login
-
-app.post('/login', async (req, res) => {
-  const { cedula, clave } = req.body;
-
-  if (!cedula || !clave) {
-    return res.status(400).json({ error: 'Datos incompletos' });
-  }
-
-  const { data: usuario, error } = await supabase
-    .from('usuarios')
-    .select('clave, rol')
-    .eq('cedula', cedula)
-    .single();
-
-  if (error || !usuario) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
-
-  const claveOk = await bcrypt.compare(clave, usuario.clave);
-  if (!claveOk) {
-    return res.status(401).json({ error: 'Credenciales inválidas' });
-  }
-
-  // Guardamos datos en sesión
-  req.session.cedula = cedula;
-  req.session.rol = usuario.rol;
-
-  res.json({ mensaje: 'Acceso correcto', rol: usuario.rol });
 });
