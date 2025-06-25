@@ -26,20 +26,6 @@ app.use(session({
 // 🌐 Servir archivos estáticos desde /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 📄 Respuesta directa al ingresar por "/"
-// Ruta raíz para mostrar el login
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Acceso al panel según sesión
-app.get('/panel', (req, res) => {
-  if (!req.session || !req.session.rol) {
-    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
-  }
-  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
-});
-
 
 // 🛠️ Aquí puedes continuar agregando tus otras rutas (login, panel, etc.)
 
@@ -176,6 +162,9 @@ app.post('/usuarios/nuevo', async (req, res) => {
 
 //listar instituciones (tabla)
 app.get('/instituciones/listar', async (req, res) => {
+  const { data: instituciones, error: errorInstituciones } = await supabase
+    .from('instituciones')
+    .select('codigodea, nombreplantel, ceduladirector, status');
 
   if (errorInstituciones) {
     return res.status(500).json({ error: 'Error al cargar instituciones' });
@@ -197,10 +186,39 @@ app.get('/instituciones/listar', async (req, res) => {
         nombredirector: director?.nombresapellidosrep || 'Sin registrar',
         telefono: director?.telefono || 'No disponible'
       };
-    }));
-});
+    })
+  );
 
   res.json(resultados);
+});
+
+
+// Ruta protegida para servir el panel
+app.get('/panel', (req, res) => {
+  if (!req.session || !req.session.rol) {
+    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  }
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
+});
+
+// Ruta raíz para mostrar login
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Obtener datos del usuario activo desde sesión
+app.get('/usuario/activo', (req, res) => {
+  res.json({
+    cedula: req.session?.cedula || null,
+    rol: req.session?.rol || null
+  });
+});
+
+// Cerrar sesión
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login.html');
+  });
 });
 
 // Escuchar el puerto al final de todo
