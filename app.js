@@ -14,14 +14,22 @@ const supabase = createClient(
 const bcrypt = require('bcryptjs');
 
 app.use(express.json());
+
+//app.use(express.static(path.join(__dirname, 'public')));
+
+//app.get('/', (req, res) => {
+//  if (req.session && req.session.rol) {
+//    return res.redirect('/panel');
+//  }
+//  res.redirect('/login.html');
+//});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  if (req.session && req.session.rol) {
-    return res.redirect('/panel');
-  }
   res.redirect('/login.html');
 });
+
 
 // Buscar director por cédula
 app.get('/directores/cedula/:cedula', async (req, res) => {
