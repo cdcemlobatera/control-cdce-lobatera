@@ -217,13 +217,13 @@ app.get('/logout', (req, res) => {
   });
 });
 
-//const server = app.listen(PORT, () => {
-//  console.log(`Servidor corriendo en puerto ${PORT}`);
-//});
-
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
+
+//app.listen(PORT, () => {
+//  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+//});
 
 server.on('error', err => {
   if (err.code === 'EADDRINUSE') {
