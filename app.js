@@ -61,7 +61,10 @@ app.post('/login', async (req, res) => {
   req.session.cedula = cedula;
   req.session.rol = usuario.rol;
 
-  res.json({ mensaje: 'Acceso correcto', rol: usuario.rol });
+res.json({
+  mensaje: 'Acceso correcto',
+  rol: usuario.rol,
+  redirigirA: '/panel'
 });
 
 
