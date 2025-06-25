@@ -184,40 +184,35 @@ app.get('/instituciones/listar', async (req, res) => {
   res.json(data);
 });
 
-app.get('/instituciones/listar', async (req, res) => {
-    const { data: instituciones, error: errorInstituciones } = await supabase
-      .from('instituciones')
-      .select('codigodea, nombreplantel, ceduladirector, status');
-  
-    if (errorInstituciones) {
-      return res.status(500).json({ error: 'Error al cargar instituciones' });
-    }
-  
-    // Enriquecer cada institución con nombre y teléfono del director
-app.get('/instituciones/listar', async (req, res) => {
-  const { data: instituciones, error: errorInstituciones } = await supabase
-    .from('instituciones')
-    .select('codigodea, nombreplantel, ceduladirector, status');
-
-  if (errorInstituciones) {
-    return res.status(500).json({ error: 'Error al cargar instituciones' });
+// Ruta protegida para servir el panel
+app.get('/panel', (req, res) => {
+  if (!req.session || !req.session.rol) {
+    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
   }
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
+});
 
-  // Enriquecer cada institución con nombre y teléfono del director
-  const resultados = await Promise.all(
-    instituciones.map(async inst => {
-      const { data: director } = await supabase
-        .from('raclobatera')
-        .select('nombresapellidosrep, telefono')
-        .eq('cedula', inst.ceduladirector)
-        .single();
+// Ruta raíz para mostrar login
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
 
-      return {
-        ...inst,
-        nombredirector: director?.nombresapellidosrep || 'Sin registrar',
-        telefono: director?.telefono || 'No disponible'
-      };
-    }));
+// Obtener datos del usuario activo desde sesión
+app.get('/usuario/activo', (req, res) => {
+  res.json({
+    cedula: req.session?.cedula || null,
+    rol: req.session?.rol || null
+  });
+});
 
-  res.json(resultados);
+// Cerrar sesión
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login.html');
+  });
+});
+
+// Escuchar el puerto al final de todo
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
