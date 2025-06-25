@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 📄 Respuesta directa al ingresar por "/"
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
-    return res.redirect('/login.html'); // Evita acceso sin sesión
+    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
   }
   res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
