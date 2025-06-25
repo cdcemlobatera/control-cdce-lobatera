@@ -14,20 +14,24 @@ const supabase = createClient(
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
+// 🔐 Middleware de sesión y JSON
 app.use(express.json());
 
-// Asegurar la clave...app.use(express.json());
 app.use(session({
-  secret: 'mi-clave-segura',
+  secret: 'mi-clave-segura', // Cámbiala por una más robusta en producción
   resave: false,
   saveUninitialized: true
 }));
 
+// 🌐 Servir archivos estáticos desde /public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 📄 Respuesta directa al ingresar por "/"
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
+
+// 🛠️ Aquí puedes continuar agregando tus otras rutas (login, panel, etc.)
 
 // Login
 
