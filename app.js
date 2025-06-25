@@ -222,7 +222,20 @@ app.get('/logout', (req, res) => {
 });
 
 // Escuchar el puerto al final de todo
-app.listen(PORT, () => {
+//app.listen(PORT, () => {
   //console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`Servidor activo en puerto ${PORT}`);
+  //console.log(`Servidor activo en puerto ${PORT}`);
+//});
+
+const server = app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+});
+
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`⚠️ El puerto ${PORT} ya está en uso. Render aún no ha liberado el anterior.`);
+    process.exit(1);
+  } else {
+    console.error('❌ Error al iniciar el servidor:', err);
+  }
 });
