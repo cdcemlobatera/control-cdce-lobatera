@@ -11,6 +11,8 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+const bcrypt = require('bcryptjs');
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -57,8 +59,6 @@ app.listen(PORT, () => {
 });
 
 // Nuevo Usuario
-const bcrypt = require('bcryptjs');
-
 app.post('/usuarios/nuevo', async (req, res) => {
   const { cedula, clave, rol } = req.body;
 
@@ -102,8 +102,6 @@ app.post('/usuarios/nuevo', async (req, res) => {
 });
 
 // Login
-
-const bcrypt = require('bcryptjs');
 
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
