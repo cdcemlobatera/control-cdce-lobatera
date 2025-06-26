@@ -139,6 +139,26 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
   </div>
 
   <script>
+    async function validarDEA() {
+      const codigo = document.getElementById('codigodea').value.trim();
+      const mensaje = document.getElementById('mensajeDEA');
+      if (!codigo) return mensaje.textContent = '';
+    
+      const res = await fetch(`/instituciones/listar`);
+      if (!res.ok) return mensaje.textContent = 'Error al validar Código DEA.';
+    
+      const lista = await res.json();
+      const existe = lista.some(inst => inst.codigodea === codigo);
+    
+      if (existe) {
+        mensaje.textContent = '⚠️ Este Código DEA ya está registrado.';
+      } else {
+        mensaje.textContent = '';
+      }
+    }
+  </script>
+
+  <script>
   function abrirFormulario() {
     document.getElementById('modalRegistro').style.display = 'block';
   }
