@@ -272,7 +272,7 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
   </script>
   <script>
     document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
-      e.preventDefault(); // ⛔ evita recarga
+      e.preventDefault();
     
       const form = e.target;
       const datos = {
@@ -283,9 +283,6 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
         niveledu: form.niveledu.value,
         parroquia: form.parroquia.value,
         ceduladirector: form.ceduladirector.value.trim(),
-        //nombresapellidosrep: document.getElementById('nombredirector').value,
-        //telefono: document.getElementById('telefonodirector').value,
-        //correo: document.getElementById('correodirector').value,
         status: form.status.value,
         registrado: new Date().toISOString()
       };
@@ -300,13 +297,13 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
         alert('✅ Institución registrada con éxito');
         cerrarFormulario();
         form.reset();
+        document.getElementById('mensajeDEA').textContent = '';
       } else {
-        const texto = await res.text(); // 👈 muestra el mensaje real
-        alert(`❌ Error al registrar: ${texto}`);
-        console.error('Detalles del error:', texto);
+        const errorTexto = await res.text();
+        alert(`❌ Error al registrar: ${errorTexto}`);
+        console.error(errorTexto);
       }
-      
     });
-    </script>
+  </script>
 </body>
 </html>
