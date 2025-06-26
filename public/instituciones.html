@@ -74,7 +74,8 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
         <legend>Datos del Plantel</legend>
   
         <label>Código DEA:</label><br>
-        <input type="text" name="codigodea" required><br><br>
+        <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" required><br><br>
+        <span id="mensajeDEA" style="color:crimson; font-size:0.9em;"></span>
   
         <label>Nombre del Plantel:</label><br>
         <input type="text" name="nombreplantel" required><br><br>
