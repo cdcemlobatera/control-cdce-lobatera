@@ -58,34 +58,69 @@
       margin-top: 12px;
       cursor: pointer;
     }
-
-  .resumen-container {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-  }
-  .card {
-    background: #f0f4f8;
-    padding: 1rem;
-    border-radius: 8px;
-    flex: 1;
-    min-width: 150px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-    
   </style>
+  <style>
+    .resumen-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      justify-content: center;
+    }
+  
+    .card {
+      background: #f4f6fa;
+      padding: 1rem;
+      border-radius: 8px;
+      flex: 1 1 180px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      font-family: 'Segoe UI', sans-serif;
+    }
+  
+    .card .icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+    }
+  
+    .card strong {
+      font-size: 1.6rem;
+      display: block;
+      color: #2c3e50;
+    }
+  
+    .card span {
+      font-size: 0.95rem;
+      color: #555;
+    }
+  </style>
+
 </head>
 <body>
   <h1>Instituciones Registradas</h1>
 
-  <div class="resumen-container">
-    <div class="card">🏫 <strong id="total Instituciones">0</strong><br>Instituciones</div>
-    <div class="card">🏛️ <strong id="total Dependencias">0</strong><br>Dependencias</div>
-    <div class="card">📚 <strong id="total Niveles">0</strong><br>Niveles</div>
-    <div class="card">👤 <strong id="total Directores">0</strong><br>Directores únicos</div>
-  </div>
+   <div class="resumen-container">
+      <div class="card">
+        <div class="icon">🏫</div>
+        <strong id="totalInstituciones">0</strong><br>
+        <span>Instituciones</span>
+      </div>
+      <div class="card">
+        <div class="icon">🏛️</div>
+        <strong id="totalDependencias">0</strong><br>
+        <span>Dependencias</span>
+      </div>
+      <div class="card">
+        <div class="icon">📚</div>
+        <strong id="totalNiveles">0</strong><br>
+        <span>Niveles</span>
+      </div>
+      <div class="card">
+        <div class="icon">👤</div>
+        <strong id="totalDirectores">0</strong><br>
+        <span>Directores únicos</span>
+      </div>
+    </div>
 
   <div style="margin-top: 1rem;">
     <button onclick="window.history.back()">⬅️ Volver</button>
@@ -223,8 +258,28 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
     const directores = new Set(lista.map(i => i.ceduladirector));
     document.getElementById('totalDirectores').textContent = directores.size;
   }
-  </script>
+    
+  async function cargarResumen() {
+    try {
+      const res = await fetch('/instituciones/resumen');
+      if (!res.ok) throw new Error('Error al obtener resumen');
 
+      const data = await res.json();
+
+      document.getElementById('totalInstituciones').textContent = data.totalInstituciones;
+      document.getElementById('totalDependencias').textContent = data.totalDependencias;
+      document.getElementById('totalNiveles').textContent = data.totalNiveles;
+      document.getElementById('totalDirectores').textContent = data.totalDirectores;
+
+    } catch (error) {
+      console.error('❌ Resumen no disponible:', error);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', cargarResumen);
+  
+  </script>
+  
   <script>
   function abrirFormulario() {
     document.getElementById('modalRegistro').style.display = 'block';
