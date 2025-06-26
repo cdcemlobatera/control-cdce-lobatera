@@ -255,3 +255,24 @@ server.on('error', err => {
     console.error('❌ Error al iniciar el servidor:', err);
   }
 });
+
+//tarjetas de totalizacion de Instituciones (Resumen)
+app.get('/instituciones/resumen', async (req, res) => {
+  const { data, error } = await supabase
+    .from('instituciones')
+    .select('dependencia, niveledu, ceduladirector, codigodea');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const totalInstituciones = data.length;
+  const dependencias = new Set(data.map(i => i.dependencia));
+  const niveles = new Set(data.map(i => i.niveledu));
+  const directores = new Set(data.map(i => i.ceduladirector));
+
+  res.json({
+    totalInstituciones,
+    totalDependencias: dependencias.size,
+    totalNiveles: niveles.size,
+    totalDirectores: directores.size
+  });
+});
