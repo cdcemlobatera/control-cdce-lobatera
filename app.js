@@ -100,18 +100,23 @@ app.get('/directores/buscar', async (req, res) => {
 
 // Registrar nueva institución
 app.post('/instituciones/nueva', async (req, res) => {
-  const datos = req.body;
+  try {
+    const datos = req.body;
 
-  const { data, error } = await supabase
-    .from('instituciones')
-    .insert([datos]);
+    const { data, error } = await supabase
+      .from('instituciones')
+      .insert([datos]);
 
-  if (error) {
-    console.error('❌ Error al insertar en Supabase:', error);
-    return res.status(500).send('Error al registrar la institución.');
+    if (error) {
+      console.error('❌ Supabase insert error:', error);
+      return res.status(500).send(error.message);
+    }
+
+    res.status(200).json({ mensaje: 'Registro exitoso', data });
+  } catch (e) {
+    console.error('❌ Error general:', e);
+    res.status(500).send('Error inesperado en el servidor.');
   }
-
-  res.status(200).json({ mensaje: 'Registro exitoso', data });
 });
 
 
