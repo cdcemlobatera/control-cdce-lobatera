@@ -36,6 +36,9 @@
       background-color: #f0f8ff;
     }
   </style>
+  style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
+  background:#fff; padding:1.5rem; box-shadow:0 0 10px #aaa;
+  max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
 </head>
 <body>
   <h1>Instituciones Registradas</h1>
@@ -61,7 +64,10 @@
   <button onclick="abrirFormulario()" style="margin-top: 1rem;">➕ Registrar nueva institución</button>
   
   <!-- 📦 Modal del formulario -->
-  <div id="modalRegistro" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:1.5rem; box-shadow:0 0 10px #aaa; max-width:600px; width:90%; z-index:999;">
+  <div id="modalRegistro" style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
+background:#fff; padding:1.5rem; box-shadow:0 0 10px #aaa;
+max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
+>
     <h2>Registrar Nueva Institución</h2>
     <form id="formInstitucion">
       <fieldset style="margin-bottom:1rem;">
@@ -132,49 +138,48 @@
   </div>
 
   <script>
-function abrirFormulario() {
-  document.getElementById('modalRegistro').style.display = 'block';
-}
-
-function cerrarFormulario() {
-  document.getElementById('modalRegistro').style.display = 'none';
-}
-
-async function buscarDirector() {
-  const cedula = document.getElementById('ceduladirector').value.trim();
-  if (!cedula) return;
-
-  const res = await fetch(`/directores/cedula/${cedula}`);
-  if (res.ok) {
-    const data = await res.json();
-    document.getElementById('nombredirector').value = data.nombresapellidosrep || '';
-    document.getElementById('telefonodirector').value = data.telefono || '';
-    document.getElementById('correodirector').value = data.correo || '';
-  } else {
-    document.getElementById('nombredirector').value = '';
-    document.getElementById('telefonodirector').value = '';
-    document.getElementById('correodirector').value = '';
+  function abrirFormulario() {
+    document.getElementById('modalRegistro').style.display = 'block';
   }
-}
-
-async function sugerirDirector() {
-  const input = document.getElementById('ceduladirector');
-  const texto = input.value.trim();
-  const datalist = document.getElementById('listaDirectores');
-  if (texto.length < 3) return datalist.innerHTML = '';
-
-  const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
-  const data = await res.json();
-
-  datalist.innerHTML = '';
-  data.forEach(d => {
-    const option = document.createElement('option');
-    option.value = d.cedula;
-    datalist.appendChild(option);
-  });
-}
-</script>
   
+  function cerrarFormulario() {
+    document.getElementById('modalRegistro').style.display = 'none';
+  }
+  
+  async function buscarDirector() {
+    const cedula = document.getElementById('ceduladirector').value.trim();
+    if (!cedula) return;
+  
+    const res = await fetch(`/directores/cedula/${cedula}`);
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('nombredirector').value = data.nombresapellidosrep || '';
+      document.getElementById('telefonodirector').value = data.telefono || '';
+      document.getElementById('correodirector').value = data.correo || '';
+    } else {
+      document.getElementById('nombredirector').value = '';
+      document.getElementById('telefonodirector').value = '';
+      document.getElementById('correodirector').value = '';
+    }
+  }
+  
+  async function sugerirDirector() {
+    const input = document.getElementById('ceduladirector');
+    const texto = input.value.trim();
+    const datalist = document.getElementById('listaDirectores');
+    if (texto.length < 3) return datalist.innerHTML = '';
+  
+    const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+    const data = await res.json();
+  
+    datalist.innerHTML = '';
+    data.forEach(d => {
+      const option = document.createElement('option');
+      option.value = d.cedula;
+      datalist.appendChild(option);
+    });
+  }
+  </script>
   <script>
     async function cargarInstituciones() {
       const res = await fetch('/instituciones/listar');
