@@ -301,9 +301,11 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
         cerrarFormulario();
         form.reset();
       } else {
-        alert('❌ Error al registrar. Verifica los datos o revisa la consola.');
-        console.error(await res.text());
+        const texto = await res.text(); // 👈 muestra el mensaje real
+        alert(`❌ Error al registrar: ${texto}`);
+        console.error('Detalles del error:', texto);
       }
+      
     });
     </script>
 </body>
