@@ -270,5 +270,41 @@ max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
 
     cargarInstituciones();
   </script>
+  <script>
+    document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
+      e.preventDefault(); // ⛔ evita recarga
+    
+      const form = e.target;
+      const datos = {
+        codigodea: form.codigodea.value.trim(),
+        nombreplantel: form.nombreplantel.value.trim(),
+        codigodep: form.codigodep.value.trim(),
+        dependencia: form.dependencia.value,
+        niveledu: form.niveledu.value,
+        parroquia: form.parroquia.value,
+        ceduladirector: form.ceduladirector.value.trim(),
+        nombresapellidosrep: document.getElementById('nombredirector').value,
+        telefono: document.getElementById('telefonodirector').value,
+        correo: document.getElementById('correodirector').value,
+        status: form.status.value,
+        registrado: new Date().toISOString()
+      };
+    
+      const res = await fetch('/instituciones/nueva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+    
+      if (res.ok) {
+        alert('✅ Institución registrada con éxito');
+        cerrarFormulario();
+        form.reset();
+      } else {
+        alert('❌ Error al registrar. Verifica los datos o revisa la consola.');
+        console.error(await res.text());
+      }
+    });
+    </script>
 </body>
 </html>
