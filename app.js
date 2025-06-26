@@ -262,7 +262,10 @@ app.get('/instituciones/resumen', async (req, res) => {
     .from('instituciones')
     .select('dependencia, niveledu, ceduladirector, codigodea');
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('❌ Error al obtener resumen:', error);
+    return res.status(500).json({ error: error.message });
+  }
 
   const totalInstituciones = data.length;
   const dependencias = new Set(data.map(i => i.dependencia));
