@@ -100,15 +100,20 @@ app.get('/directores/buscar', async (req, res) => {
 
 // Registrar nueva institución
 app.post('/instituciones/nueva', async (req, res) => {
-  const { codigodea, nombreplantel, ceduladirector, status, registrado } = req.body;
+  const datos = req.body;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('instituciones')
-    .insert([{ codigodea, nombreplantel, ceduladirector, status, registrado }]);
+    .insert([datos]);
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.status(201).json({ mensaje: 'Institución registrada' });
+  if (error) {
+    console.error('❌ Error al insertar en Supabase:', error);
+    return res.status(500).send('Error al registrar la institución.');
+  }
+
+  res.status(200).json({ mensaje: 'Registro exitoso', data });
 });
+
 
 // Nuevo Usuario
 app.post('/usuarios/nuevo', async (req, res) => {
