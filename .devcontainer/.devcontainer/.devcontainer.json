@@ -1,0 +1,24 @@
+{
+  "name": "Control CDCE Codespace",
+  "features": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "dsznajder.es7-react-js-snippets",
+        "wix.vscode-import-cost",
+        "eg2.vscode-npm-script",
+        "christian-kohler.path-intellisense",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "eamodio.gitlens",
+        "formulahendry.auto-close-tag",
+        "formulahendry.auto-rename-tag",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  },
+  "forwardPorts": [],
+  "postCreateCommand": "npm install",
+  "remoteUser": "codespace"
+}
