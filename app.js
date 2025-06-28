@@ -1,3 +1,4 @@
+// ─── 📦 DEPENDENCIAS Y CONFIGURACIÓN ─────────────────────────────
 const express = require('express');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
@@ -14,22 +15,16 @@ const supabase = createClient(
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
-// 🔐 Middleware de sesión y JSON
+// ─── 🔐 MIDDLEWARES ──────────────────────────────────────────────
 app.use(express.json());
-
 app.use(session({
-  secret: 'mi-clave-segura', // Cámbiala por una más robusta en producción
+  secret: 'mi-clave-segura',
   resave: false,
   saveUninitialized: true
 }));
-
-// 🌐 Servir archivos estáticos desde /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// 🛠️ Aquí puedes continuar agregando tus otras rutas (login, panel, etc.)
-
-// Login
+// ─── 🔑 AUTENTICACIÓN Y SESIÓN ──────────────────────────────────
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
 
@@ -52,7 +47,6 @@ app.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Credenciales inválidas' });
   }
 
-  // Guardamos datos en sesión
   req.session.cedula = cedula;
   req.session.rol = usuario.rol;
 
@@ -63,16 +57,20 @@ app.post('/login', async (req, res) => {
   });
 });
 
-//usuario activo
-app.get('/usuario/activo', (req, res) => {
-  res.json({
-    cedula: req.session?.cedula,
-    rol: req.session?.rol
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login.html');
   });
 });
 
+app.get('/usuario/activo', (req, res) => {
+  res.json({
+    cedula: req.session?.cedula || null,
+    rol: req.session?.rol || null
+  });
+});
 
-// Buscar director por cédula
+// ─── 👤 DIRECTORES: RAC LOBATERA ────────────────────────────────
 app.get('/directores/cedula/:cedula', async (req, res) => {
   const { cedula } = req.params;
   const { data, error } = await supabase
@@ -85,7 +83,6 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
   res.json(data);
 });
 
-// Buscar directores por nombre
 app.get('/directores/buscar', async (req, res) => {
   const search = req.query.q || '';
   const { data, error } = await supabase
@@ -98,11 +95,12 @@ app.get('/directores/buscar', async (req, res) => {
   res.json(data);
 });
 
-// Registrar nueva institución
+// ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
+
+// Crear nueva institución
 app.post('/instituciones/nueva', async (req, res) => {
   try {
     const datos = req.body;
-
     const { data, error } = await supabase
       .from('instituciones')
       .insert([datos]);
@@ -119,54 +117,25 @@ app.post('/instituciones/nueva', async (req, res) => {
   }
 });
 
+// Editar institución existente
+app.patch('/instituciones/:codigodea', async (req, res) => {
+  const { codigodea } = req.params;
+  const datos = req.body;
 
-// Nuevo Usuario
-app.post('/usuarios/nuevo', async (req, res) => {
-  const { cedula, clave, rol } = req.body;
+  const { error } = await supabase
+    .from('instituciones')
+    .update(datos)
+    .eq('codigodea', codigodea);
 
-  if (!cedula || !clave || !rol) {
-    return res.status(400).json({ error: 'Campos incompletos' });
+  if (error) {
+    console.error('❌ Error al editar institución:', error);
+    return res.status(500).json({ error: 'Error al actualizar institución' });
   }
 
-  // Verificar si pertenece al personal del Ministerio (tabla raclobatera)
-  
-  const { data: persona, error: errorPersona } = await supabase
-    .from('raclobatera')
-    .select('nombresapellidosrep')
-    .eq('cedula', cedula)
-    .single();
-
-  if (errorPersona || !persona) {
-    return res.status(403).json({ error: 'La cédula no pertenece al personal registrado en el RAC Lobatera' });
-  }
-
-  // Verificar si ya está registrado como usuario
-  
-  const { data: existente } = await supabase
-    .from('usuarios')
-    .select('cedula')
-    .eq('cedula', cedula)
-    .single();
-
-  if (existente) {
-    return res.status(409).json({ error: 'El usuario ya existe' });
-  }
-
-  // Encriptar clave y guardar
-  const claveEncriptada = await bcrypt.hash(clave, 10);
-
-  const { error: insertError } = await supabase
-    .from('usuarios')
-    .insert([{ cedula, clave: claveEncriptada, rol }]);
-
-  if (insertError) {
-    return res.status(500).json({ error: 'Error al registrar usuario' });
-  }
-
-  res.status(201).json({ mensaje: 'Usuario creado exitosamente' });
+  res.status(200).json({ mensaje: 'Institución actualizada exitosamente' });
 });
 
-//listar instituciones (tabla)
+// Listar instituciones (para la tabla)
 app.get('/instituciones/listar', async (req, res) => {
   const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
@@ -198,8 +167,71 @@ app.get('/instituciones/listar', async (req, res) => {
   res.json(resultados);
 });
 
+// 🔢 Resumen estadístico de instituciones
+app.get('/instituciones/resumen', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('instituciones')
+      .select('dependencia, niveledu, ceduladirector, codigodea');
 
-// Ruta protegida para servir el panel
+    if (error) {
+      console.error('❌ Error al obtener resumen:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    const totalInstituciones = data.length;
+    const dependencias = new Set(data.map(i => i.dependencia).filter(Boolean));
+    const niveles = new Set(data.map(i => i.niveledu).filter(Boolean));
+    const directores = new Set(data.map(i => i.ceduladirector).filter(Boolean));
+
+    console.log('🎒 Registros obtenidos:', data.length, data[0]);
+
+    res.json({
+      totalInstituciones,
+      totalDependencias: dependencias.size,
+      totalNiveles: niveles.size,
+      totalDirectores: directores.size     
+    });
+  } catch (e) {
+    console.error('❌ Error inesperado en resumen:', e);
+    res.status(500).json({ error: 'Error inesperado al generar resumen' });
+  }
+
+});
+
+
+// Detalle de institución (editar)
+app.get('/instituciones/:id', async (req, res) => {
+  const { data: institucion, error } = await supabase
+    .from('instituciones')
+    .select('*')
+    .eq('codigodea', req.params.id)
+    .single();
+
+  if (error || !institucion) {
+    return res.status(404).json({ error: 'Institución no encontrada' });
+  }
+
+  const { data: director } = await supabase
+    .from('raclobatera')
+    .select('nombresapellidosrep, telefono, correo')
+    .eq('cedula', institucion.ceduladirector)
+    .single();
+
+  res.json({
+    ...institucion,
+    nombredirector: director?.nombresapellidosrep || '',
+    telefonodirector: director?.telefono || '',
+    correodirector: director?.correo || ''
+  });
+});
+
+// Página principal → login
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Ruta protegida para acceder al panel
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
     return res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -207,45 +239,9 @@ app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
-// Ruta raíz para mostrar login
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Obtener datos del usuario activo desde sesión
-app.get('/usuario/activo', (req, res) => {
-  res.json({
-    cedula: req.session?.cedula || null,
-    rol: req.session?.rol || null
-  });
-});
-
-app.get('/directores/cedula/:cedula', async (req, res) => {
-  const { cedula } = req.params;
-  const { data, error } = await supabase
-    .from('raclobatera')
-    .select('nombresapellidosrep, telefono, correo')
-    .eq('cedula', cedula)
-    .single();
-
-  if (error || !data) return res.status(404).json({ error: 'Director no encontrado' });
-  res.json(data);
-});
-
-// Cerrar sesión
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/login.html');
-  });
-});
-
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
-
-//app.listen(PORT, () => {
-//  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-//});
 
 server.on('error', err => {
   if (err.code === 'EADDRINUSE') {
@@ -254,28 +250,4 @@ server.on('error', err => {
   } else {
     console.error('❌ Error al iniciar el servidor:', err);
   }
-});
-
-//tarjetas de totalizacion de Instituciones (Resumen)
-app.get('/instituciones/resumen', async (req, res) => {
-  const { data, error } = await supabase
-    .from('instituciones')
-    .select('dependencia, niveledu, ceduladirector, codigodea');
-
-  if (error) {
-    console.error('❌ Error al obtener resumen:', error);
-    return res.status(500).json({ error: error.message });
-  }
-
-  const totalInstituciones = data.length;
-  const dependencias = new Set(data.map(i => i.dependencia));
-  const niveles = new Set(data.map(i => i.niveledu));
-  const directores = new Set(data.map(i => i.ceduladirector));
-
-  res.json({
-    totalInstituciones,
-    totalDependencias: dependencias.size,
-    totalNiveles: niveles.size,
-    totalDirectores: directores.size
-  });
 });

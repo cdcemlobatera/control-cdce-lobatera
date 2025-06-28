@@ -4,51 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Inicio — CDCE Lobatera</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 1rem 2rem;
-      background-color: #f4f4f4;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #004080;
-      margin-bottom: 1.5rem;
-    }
-    h1 {
-      color: #004080;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      background-color: #004080;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    ul li {
-      margin: 0.5rem 0;
-      font-size: 1.1rem;
-    }
-    a {
-      text-decoration: none;
-      color: #004080;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .bloque {
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 4px rgba(0,0,0,0.1);
-    }
-  </style>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/panel.css" />
 </head>
 <body>
   <header>
@@ -60,46 +18,7 @@
     <p>Cargando tu panel...</p>
   </section>
 
-  <script>
-    fetch('/usuario/activo')
-      .then(res => res.json())
-      .then(({ rol }) => {
-        const contenido = document.getElementById('contenido-rol');
-        if (!rol) {
-          return location.href = '/login.html';
-        }
-
-        if (rol === 'admin') {
-          contenido.innerHTML = `
-            <h2>Bienvenido, Administrador</h2>
-            <ul>
-              <li><a href="instituciones.html">🏫 Gestionar instituciones</a></li>
-              <li><a href="registro-usuario.html">👤 Registrar usuarios</a></li>
-              <li>📊 Reportes generales</li>
-              <li>🧑‍💼 Gestión de personal (próximamente)</li>
-            </ul>`;
-        } else if (rol === 'director') {
-          contenido.innerHTML = `
-            <h2>Panel del Director</h2>
-            <ul>
-              <li><a href="instituciones.html">🏫 Ver mi institución</a></li>
-              <li>📄 Registrar matrícula</li>
-              <li>📬 Comunicaciones</li>
-              <li>🧑‍💼 Personal asignado (próximamente)</li>
-            </ul>`;
-        } else {
-          contenido.innerHTML = `
-            <h2>Área administrativa</h2>
-            <ul>
-              <li><a href="instituciones.html">🏫 Institución asignada</a></li>
-              <li>📁 Documentos disponibles</li>
-            </ul>`;
-        }
-      });
-
-    document.getElementById('cerrarSesion').addEventListener('click', () => {
-      fetch('/logout').then(() => location.href = '/login.html');
-    });
-  </script>
+  <!-- Script principal -->
+  <script src="js/panel.js"></script>
 </body>
 </html>

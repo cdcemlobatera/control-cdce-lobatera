@@ -2,125 +2,49 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestión de Instituciones</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f8f8f8;
-      padding: 1rem 2rem;
-    }
-    h1 {
-      color: #004080;
-    }
-    button {
-      margin-bottom: 1rem;
-      background-color: #004080;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      padding: 0.75rem;
-      border: 1px solid #ccc;
-    }
-    th {
-      background-color: #e6f0ff;
-    }
-    tbody tr:hover {
-      background-color: #f0f8ff;
-    }
-    
-    #modalRegistro input[type="text"],
-    #modalRegistro input[type="email"],
-    #modalRegistro input[type="number"],
-    #modalRegistro select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 8px;
-      margin-bottom: 12px;
-    }
-  
-    #modalRegistro label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-  
-    #modalRegistro button {
-      padding: 10px 16px;
-      font-size: 16px;
-      margin-top: 12px;
-      cursor: pointer;
-    }
-  </style>
-  <style>
-    .resumen-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin: 1.5rem 0;
-      justify-content: center;
-    }
-  
-    .card {
-      background: #f4f6fa;
-      padding: 1rem;
-      border-radius: 8px;
-      flex: 1 1 180px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      font-family: 'Segoe UI', sans-serif;
-    }
-  
-    .card .icon {
-      font-size: 1.8rem;
-      margin-bottom: 0.4rem;
-    }
-  
-    .card strong {
-      font-size: 1.6rem;
-      display: block;
-      color: #2c3e50;
-    }
-  
-    .card span {
-      font-size: 0.95rem;
-      color: #555;
-    }
-  </style>
 
+  <!-- 💡 Librerías externas -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- 🖌️ Estilos internos -->
+
+  <link rel="stylesheet" href="css/estilos.css">
+  
 </head>
+
 <body>
   <h1>Instituciones Registradas</h1>
 
    <div class="resumen-container">
-      <div class="card">
-        <div class="icon">🏫</div>
-        <strong id="totalInstituciones">0</strong><br>
-        <span>Instituciones</span>
-      </div>
-      <div class="card">
-        <div class="icon">🏛️</div>
-        <strong id="totalDependencias">0</strong><br>
-        <span>Dependencias</span>
-      </div>
-      <div class="card">
-        <div class="icon">📚</div>
-        <strong id="totalNiveles">0</strong><br>
-        <span>Niveles</span>
-      </div>
-      <div class="card">
-        <div class="icon">👤</div>
-        <strong id="totalDirectores">0</strong><br>
-        <span>Directores únicos</span>
-      </div>
+
+    <div class="card">
+      <div class="icon">🏫</div>
+      <strong id="totalInstituciones" class="resumen-numero">—</strong><br>
+      <span>Instituciones</span>
     </div>
+    <div class="card">
+      <div class="icon">🏛️</div>
+      <strong id="totalDependencias" class="resumen-numero">—</strong><br>
+      <span>Dependencias</span>
+    </div>
+    <div class="card">
+      <div class="icon">📚</div>
+      <strong id="totalNiveles" class="resumen-numero">—</strong><br>
+      <span>Niveles</span>
+    </div>
+    <div class="card">
+      <div class="icon">👤</div>
+      <strong id="totalDirectores" class="resumen-numero">—</strong><br>
+      <span>Directores únicos</span>
+    </div>
+
+    <p id="mensajeResumen" style="color: #e74c3c; font-weight: bold;"></p>
+    
+   </div>
+
+   
 
   <div style="margin-top: 1rem;">
     <button onclick="window.history.back()">⬅️ Volver</button>
@@ -147,260 +71,109 @@
   <button onclick="abrirFormulario()" style="margin-top: 1rem;">➕ Registrar nueva institución</button>
  
   <!-- 📦 Modal del formulario -->
-  <div id="modalRegistro" style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
-background:#fff; padding:1.5rem; box-shadow:0 0 10px #aaa;
-max-width:600px; width:90%; z-index:999; max-height:90vh; overflow-y:auto;"
->
+  <div id="modalRegistro" style="
+  display: none;
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px #aaa;
+  max-width: 600px;
+  width: 90%;
+  z-index: 999;
+  max-height: 90vh;
+  overflow-y: auto;">
+  
     <h2>Registrar Nueva Institución</h2>
     <form id="formInstitucion">
-      <fieldset style="margin-bottom:1rem;">
-        <legend>Datos del Plantel</legend>
-  
-        <label>Código DEA:</label><br>
-        <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" required><br><br>
-        <span id="mensajeDEA" style="color:crimson; font-size:0.9em;"></span>
-  
-        <label>Nombre del Plantel:</label><br>
-        <input type="text" name="nombreplantel" required><br><br>
-  
-        <label>Código de Dependencia:</label><br>
-        <input type="text" name="codigodep"><br><br>
-  
-        <label>Dependencia:</label><br>
-        <select name="dependencia" required>
-          <option value="">Seleccione</option>
-          <option value="Nacional">Nacional</option>
-          <option value="Estadal">Estadal</option>
-          <option value="Municipal">Municipal</option>
-          <option value="Privada">Privada</option>
-        </select><br><br>
-  
-        <label>Nivel Educativo:</label><br>
-        <select name="niveledu" required>
-          <option value="">Seleccione</option>
-          <option value="Maternal">Maternal</option>
-          <option value="Inicial">Inicial</option>
-          <option value="Maternal Inicial">Maternal Inicial</option>
-          <option value="Primaria">Primaria</option>
-          <option value="Inicial Primaria">Inicial Primaria</option>
-          <option value="Media General">Media General</option>
-          <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
-        </select><br><br>
-  
-        <label>Parroquia:</label><br>
-        <select name="parroquia" required>
-          <option value="">Seleccione</option>
-          <option value="LOBATERA">LOBATERA</option>
-          <option value="CONSTITUCION">CONSTITUCIÓN</option>
-        </select><br><br>
-      </fieldset>
-  
-      <fieldset>
-        <legend>Datos del Director</legend>
-  
-        <label>Cédula del Director:</label><br>
-        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()" onblur="buscarDirector()" list="listaDirectores" required autocomplete="off"><br>
-        <datalist id="listaDirectores"></datalist><br>
-  
-        <label>Nombres y Apellidos:</label><br>
-        <input type="text" id="nombredirector" readonly><br><br>
-  
-        <label>Teléfono:</label><br>
-        <input type="text" id="telefonodirector" readonly><br><br>
-  
-        <label>Correo:</label><br>
-        <input type="text" id="correodirector" readonly><br><br>
-      </fieldset>
-  
-      <label>Status:</label><br>
-      <select name="status">
-        <option value="Activo">Activo</option>
-        <option value="Inactivo">Inactivo</option>
-      </select><br><br>
-  
-      <input type="hidden" name="registrado" value="">
-  
-      <button type="submit">Guardar Institución</button>
-      <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
-    </form>
+  <fieldset style="margin-bottom:1rem;">
+    <legend>Datos del Plantel</legend>
+
+    <label>Código DEA:</label><br>
+    <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" required><br><br>
+    <span id="mensajeDEA" style="color:crimson; font-size:0.9em;"></span>
+
+    <label>Nombre del Plantel:</label><br>
+    <input type="text" name="nombreplantel" id="nombreplantel" required><br><br>
+
+    <label>Código de Dependencia:</label><br>
+    <input type="text" name="codigodep" id="codigodep"><br><br>
+
+    <label>Dependencia:</label><br>
+    <select name="dependencia" id="dependencia" required>
+      <option value="">Seleccione</option>
+      <option value="Nacional">Nacional</option>
+      <option value="Estadal">Estadal</option>
+      <option value="Municipal">Municipal</option>
+      <option value="Privada">Privada</option>
+    </select><br><br>
+
+    <label>Nivel Educativo:</label><br>
+    <select name="niveledu" id="niveledu" required>
+      <option value="">Seleccione</option>
+      <option value="Maternal">Maternal</option>
+      <option value="Inicial">Inicial</option>
+      <option value="Maternal Inicial">Maternal Inicial</option>
+      <option value="Primaria">Primaria</option>
+      <option value="Inicial Primaria">Inicial Primaria</option>
+      <option value="Media General">Media General</option>
+      <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+    </select><br><br>
+
+    <label>Parroquia:</label><br>
+    <select name="parroquia" id="parroquia" required>
+      <option value="">Seleccione</option>
+      <option value="LOBATERA">LOBATERA</option>
+      <option value="CONSTITUCION">CONSTITUCIÓN</option>
+    </select><br><br>
+  </fieldset>
+
+  <fieldset>
+    <legend>Datos del Director</legend>
+
+    <label>Cédula del Director:</label><br>
+    <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()" onblur="buscarDirector()" list="listaDirectores" required autocomplete="off"><br>
+    <datalist id="listaDirectores"></datalist><br>
+  </fieldset>
+
+  <fieldset disabled class="fieldset-lectura">
+    <legend>
+      <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
+    </legend>
+
+    <label for="nombredirector">Nombre:</label>
+    <input id="nombredirector" type="text" class="lectura" readonly>
+
+    <label for="telefonodirector">Teléfono:</label>
+    <input id="telefonodirector" type="text" class="lectura" readonly>
+
+    <label for="correodirector">Correo:</label>
+    <input id="correodirector" type="email" class="lectura" readonly>
+
+    <p class="mensaje-informativo">
+      📌 Estos datos provienen del registro del personal y se actualizan desde la sección <strong>“Personal”</strong>.
+    </p>
+    </fieldset>
+
+    <label>Status:</label><br>
+    <select name="status" id="status">
+      <option value="Activo">Activo</option>
+      <option value="Inactivo">Inactivo</option>
+    </select><br><br>
+
+    <input type="hidden" name="registrado" value="">
+    <input type="hidden" id="modoFormulario" value="crear" />
+    <input type="hidden" id="idInstitucionEditar" />
+
+    <button type="submit">Guardar Institución</button>
+    <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
+  </form>
+
   </div>
 
-  <script>
-    async function validarDEA() {
-      const codigo = document.getElementById('codigodea').value.trim();
-      const mensaje = document.getElementById('mensajeDEA');
-      if (!codigo) return mensaje.textContent = '';
-    
-      const res = await fetch(`/instituciones/listar`);
-      if (!res.ok) return mensaje.textContent = 'Error al validar Código DEA.';
-    
-      const lista = await res.json();
-      const existe = lista.some(inst => inst.codigodea === codigo);
-    
-      if (existe) {
-        mensaje.textContent = '⚠️ Este Código DEA ya está registrado.';
-      } else {
-        mensaje.textContent = '';
-      }
-    }
-  </script>
-  
-  <script>
-  function calcularResumen(lista) {
-    document.getElementById('totalInstituciones').textContent = lista.length;
-  
-    const dependencias = new Set(lista.map(i => i.dependencia));
-    document.getElementById('totalDependencias').textContent = dependencias.size;
-  
-    const niveles = new Set(lista.map(i => i.niveledu));
-    document.getElementById('totalNiveles').textContent = niveles.size;
-  
-    const directores = new Set(lista.map(i => i.ceduladirector));
-    document.getElementById('totalDirectores').textContent = directores.size;
-  }
-    
-  async function cargarResumen() {
-    try {
-      const res = await fetch('/instituciones/resumen');
-      if (!res.ok) throw new Error('Error al obtener resumen');
+  <script src="js/instituciones.js"></script>
 
-      const data = await res.json();
-
-      document.getElementById('totalInstituciones').textContent = data.totalInstituciones;
-      document.getElementById('totalDependencias').textContent = data.totalDependencias;
-      document.getElementById('totalNiveles').textContent = data.totalNiveles;
-      document.getElementById('totalDirectores').textContent = data.totalDirectores;
-
-    } catch (error) {
-      console.error('❌ Resumen no disponible:', error);
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', cargarResumen);
-  
-  </script>
-  
-  <script>
-  function abrirFormulario() {
-    document.getElementById('modalRegistro').style.display = 'block';
-  }
-  
-  function cerrarFormulario() {
-    document.getElementById('modalRegistro').style.display = 'none';
-  }
-  
-  async function buscarDirector() {
-    const cedula = document.getElementById('ceduladirector').value.trim();
-    if (!cedula) return;
-  
-    const res = await fetch(`/directores/cedula/${cedula}`);
-    if (res.ok) {
-      const data = await res.json();
-      document.getElementById('nombredirector').value = data.nombresapellidosrep || '';
-      document.getElementById('telefonodirector').value = data.telefono || '';
-      document.getElementById('correodirector').value = data.correo || '';
-    } else {
-      document.getElementById('nombredirector').value = '';
-      document.getElementById('telefonodirector').value = '';
-      document.getElementById('correodirector').value = '';
-    }
-  }
-  
-  async function sugerirDirector() {
-    const input = document.getElementById('ceduladirector');
-    const texto = input.value.trim();
-    const datalist = document.getElementById('listaDirectores');
-    if (texto.length < 3) return datalist.innerHTML = '';
-  
-    const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
-    const data = await res.json();
-  
-    datalist.innerHTML = '';
-    data.forEach(d => {
-      const option = document.createElement('option');
-      option.value = d.cedula;
-      datalist.appendChild(option);
-    });
-  }
-  </script>
-  <script>
-    async function cargarInstituciones() {
-      const res = await fetch('/instituciones/listar');
-      const data = await res.json();
-      const cuerpo = document.getElementById('tablaInstituciones');
-
-      if (!data || data.length === 0) {
-        cuerpo.innerHTML = '<tr><td colspan="5">No hay instituciones registradas.</td></tr>';
-        return;
-      }
-
-      cuerpo.innerHTML = data.map(inst => `
-        <tr>
-          <td>${inst.codigodea}</td>
-          <td>${inst.nombreplantel}</td>
-          <td>${inst.nombredirector}</td>
-          <td>${inst.telefono}</td>
-          <td>${inst.status}</td>
-          <td>
-            <button onclick="editar('${inst.codigodea}')">✏️</button>
-            <button onclick="eliminar('${inst.codigodea}')">🗑️</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    //function abrirFormulario() {
-    //  alert("Aquí iría el formulario para registrar una nueva institución (¡próximo paso!)");
-    //}
-
-    function abrirFormulario() {
-      document.getElementById('modalRegistro').style.display = 'block';
-    }
-
-    function editar(codigodea) {
-      alert("Pronto podrás editar: " + codigodea);
-    }
-
-    function eliminar(codigodea) {
-      alert("Confirmar eliminación de: " + codigodea);
-    }
-
-    cargarInstituciones();
-  </script>
-  <script>
-    document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
-      e.preventDefault();
-    
-      const form = e.target;
-      const datos = {
-        codigodea: form.codigodea.value.trim(),
-        nombreplantel: form.nombreplantel.value.trim(),
-        codigodep: form.codigodep.value.trim(),
-        dependencia: form.dependencia.value,
-        niveledu: form.niveledu.value,
-        parroquia: form.parroquia.value,
-        ceduladirector: form.ceduladirector.value.trim(),
-        status: form.status.value,
-        registrado: new Date().toISOString()
-      };
-    
-      const res = await fetch('/instituciones/nueva', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-      });
-    
-      if (res.ok) {
-        alert('✅ Institución registrada con éxito');
-        cerrarFormulario();
-        form.reset();
-        document.getElementById('mensajeDEA').textContent = '';
-      } else {
-        const errorTexto = await res.text();
-        alert(`❌ Error al registrar: ${errorTexto}`);
-        console.error(errorTexto);
-      }
-    });
-  </script>
 </body>
 </html>

@@ -1,0 +1,143 @@
+/* 🔹 Estilos base */
+body {
+  font-family: sans-serif;
+  background: #f8f8f8;
+  padding: 1rem 2rem;
+}
+
+h1 {
+  color: #004080;
+}
+
+button {
+  margin-bottom: 1rem;
+  background-color: #004080;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+/* 🔹 Tabla */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+}
+
+th {
+  background-color: #e6f0ff;
+}
+
+tbody tr:hover {
+  background-color: #f0f8ff;
+}
+
+/* 🔹 Formulario en el modal */
+#modalRegistro input[type="text"],
+#modalRegistro input[type="email"],
+#modalRegistro input[type="number"],
+#modalRegistro select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+#modalRegistro label {
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
+
+#modalRegistro button {
+  padding: 10px 16px;
+  font-size: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+/* 🔹 Campo de solo lectura */
+.fieldset-lectura {
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+
+.fieldset-lectura legend {
+  font-weight: bold;
+  color: #444;
+  font-size: 1.1em;
+}
+
+.lectura {
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  width: 100%;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.mensaje-informativo {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 10px;
+}
+
+/* 🔹 Tarjetas resumen */
+.resumen-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  justify-content: center;
+}
+
+.card {
+  background: #f4f6fa;
+  padding: 1rem;
+  border-radius: 8px;
+  flex: 1 1 180px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card .icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.card strong {
+  font-size: 1.6rem;
+  display: block;
+  color: #2c3e50;
+}
+
+.card span {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* 🎯 Estilo para los números del resumen */
+.resumen-numero {
+  font-weight: bold;
+  font-size: 2.2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: #34495e;
+  transition: transform 0.3s ease;
+}
+
+.resumen-numero.pop {
+  transform: scale(1.2);
+  color: #2c3e50;
+}
