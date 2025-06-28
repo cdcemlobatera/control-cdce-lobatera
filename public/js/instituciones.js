@@ -82,9 +82,14 @@ async function cargarResumen() {
   }
 
   try {
-    const urlResumen = 'https://ubiquitous-umbrella-r4xw497w9v6qhpgr4-3000.app.github.dev/instituciones/resumen';
-    console.log('🌐 Solicitando resumen desde:', urlResumen);
-    const res = await fetch(urlResumen);
+    //const urlResumen = 'https://ubiquitous-umbrella-r4xw497w9v6qhpgr4-3000.app.github.dev/instituciones/resumen';
+    //console.log('🌐 Solicitando resumen desde:', urlResumen);
+    //const res = await fetch(urlResumen);
+
+    const urlResumen = 'https://control-cdce-lobatera.onrender.com/instituciones/resumen';
+    const res = await fetch(urlResumen, {
+          credentials: 'include'
+    });
 
 
     console.log('🔍 Ejecutando cargarResumen');
