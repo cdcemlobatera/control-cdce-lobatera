@@ -141,3 +141,9 @@ tbody tr:hover {
   transform: scale(1.2);
   color: #2c3e50;
 }
+
+.detalle-texto {
+  margin-top: 4px;
+  font-size: 0.9em;
+  color: #333;
+}

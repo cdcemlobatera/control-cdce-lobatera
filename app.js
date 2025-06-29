@@ -226,6 +226,23 @@ app.get('/instituciones/:id', async (req, res) => {
   });
 });
 
+// 🗑️ Eliminar institución
+app.delete('/instituciones/:codigodea', async (req, res) => {
+  const { codigodea } = req.params;
+
+  const { error } = await supabase
+    .from('instituciones')
+    .delete()
+    .eq('codigodea', codigodea);
+
+  if (error) {
+    console.error('❌ Error al eliminar institución:', error);
+    return res.status(500).json({ error: 'No se pudo eliminar la institución' });
+  }
+
+  res.status(204).send(); // Sin contenido: éxito
+});
+
 // Página principal → login
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -250,4 +267,43 @@ server.on('error', err => {
   } else {
     console.error('❌ Error al iniciar el servidor:', err);
   }
+});
+
+//Circuitos educativos listar
+app.get('/circuitos/listar', async (req, res) => {
+  const { data: circuitos, error: errorCircuitos } = await supabase
+    .from('circuitoseducativos')
+    .select('codcircuitoedu, nombrecircuito, zona, cedulasupervisor')
+    .order('codcircuitoedu', { ascending: true });
+
+  if (errorCircuitos) {
+    console.error('❌ Error al cargar circuitos:', errorCircuitos);
+    return res.status(500).json({ error: 'Error al obtener circuitos' });
+  }
+
+  const resultados = await Promise.all(
+    circuitos.map(async circuito => {
+      let nombreSupervisor = 'Sin asignar';
+      if (circuito.cedulasupervisor) {
+        const { data: supervisor } = await supabase
+          .from('raclobatera')
+          .select('nombresapellidosrep')
+          .eq('cedula', circuito.cedulasupervisor)
+          .single();
+
+        if (supervisor?.nombresapellidosrep) {
+          nombreSupervisor = supervisor.nombresapellidosrep;
+        }
+      }
+
+      return {
+        codcircuitoedu: circuito.codcircuitoedu,
+        nombrecircuito: circuito.nombrecircuito,
+        zona: circuito.zona || '',
+        supervisor: nombreSupervisor
+      };
+    })
+  );
+
+  res.json(resultados);
 });

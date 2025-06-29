@@ -86,7 +86,7 @@
   max-height: 90vh;
   overflow-y: auto;">
   
-    <h2>Registrar Nueva Institución</h2>
+    <h2>Datos de la Institución</h2>
     <form id="formInstitucion">
   <fieldset style="margin-bottom:1rem;">
     <legend>Datos del Plantel</legend>
@@ -128,7 +128,27 @@
       <option value="LOBATERA">LOBATERA</option>
       <option value="CONSTITUCION">CONSTITUCIÓN</option>
     </select><br><br>
+
+    <label for="codcircuitoedu">Circuito Educativo</label>
+    <select id="codcircuitoedu" name="codcircuitoedu" required>
+      <option value="">Seleccione un circuito</option>
+    </select>
+
+    <p id="detalleCircuito" class="detalle-texto"></p>
+    <p id="detalleSupervisor" class="detalle-texto"></p>
+
+    <label for="codestadistico">Código Estadístico</label>
+    <input type="text" id="codestadistico" name="codestadistico" placeholder="Ej: EST-56789">
+
+    <label for="codcenvot">Código Centro de Votación</label>
+    <input type="text" id="codcenvot" name="codcenvot" placeholder="Ej: CENVOT-123">
+
+    <label for="nombrecenvot">Nombre Centro de Votación</label>
+    <input type="text" id="nombrecenvot" name="nombrecenvot" placeholder="Ej: UE La Democracia (CNE)">
+
   </fieldset>
+
+  <button type="button" id="btnEliminarInstitucion" class="peligro">Eliminar institución 🗑️</button>
 
   <fieldset>
     <legend>Datos del Director</legend>
@@ -173,6 +193,14 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    window.supabase = supabase.createClient(
+      'https://ymtagfdcrejmuyqflvif.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltdGFnZmRjcmVqbXV5cWZsdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzI3NTUsImV4cCI6MjA2NTg0ODc1NX0._5V445n-Bpy7_Ahvxwc3CM9f3aRLzBVtiGoMjce-N2I'
+    );
+  </script>
   <script src="js/instituciones.js"></script>
 
 </body>

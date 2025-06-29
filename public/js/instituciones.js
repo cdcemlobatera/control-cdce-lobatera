@@ -1,45 +1,120 @@
 // 🔹 UTILIDADES GENERALES
-function abrirFormulario() {
-  document.getElementById('modalRegistro').style.display = 'block';
-}
 
 function cerrarFormulario() {
   document.getElementById('modalRegistro').style.display = 'none';
+}
+
+function abrirFormulario(institucion = null) {
+  const form = document.getElementById('formInstitucion');
+  if (!form) {
+    console.warn('⚠️ No se encontró el formulario #formInstitucion');
+    return;
+  }
+
+  form.reset();
+
+  // 🧩 Referencias de elementos críticos
+  const campoModo = document.getElementById('modoFormulario');
+  const campoEditar = document.getElementById('idInstitucionEditar');
+  const campoTitulo = document.getElementById('tituloFormulario');
+  const campoMensajeDEA = document.getElementById('mensajeDEA');
+  const campoCodigoDEA = document.getElementById('codigodea');
+
+  const modo = institucion ? 'editar' : 'crear';
+
+  if (campoModo) campoModo.value = modo;
+  if (campoEditar) campoEditar.value = institucion?.codigodea || '';
+  if (campoMensajeDEA) campoMensajeDEA.textContent = '';
+  if (campoTitulo) {
+    campoTitulo.textContent = modo === 'editar'
+      ? '✏️ Editar Institución'
+      : '🏫 Nueva Institución';
+  }
+  if (campoCodigoDEA) campoCodigoDEA.readOnly = (modo === 'editar');
+
+  cargarCircuitos().then(() => {
+    // 💡 Asignar valores del objeto institución al formulario
+    if (institucion) {
+      for (const [clave, valor] of Object.entries(institucion)) {
+        if (form[clave]) {
+          form[clave].value = valor || '';
+        }
+      }
+
+      // 🧭 Mostrar zona del circuito y supervisor (al disparar 'change')
+      const selectCircuito = document.getElementById('codcircuitoedu');
+      selectCircuito.value = institucion.codcircuitoedu;
+
+      // 🔥 Este es el paso clave: simula que el usuario lo seleccionó
+      selectCircuito.dispatchEvent(new Event('change'));
+    } else {
+      // ⚙️ En modo creación: limpiar el detalle por precaución
+      setTimeout(() => {
+        const detalle = document.getElementById('detalleCircuito');
+        if (detalle) {
+          detalle.textContent = 'ℹ️ Seleccione un circuito para ver su zona';
+        } else {
+          console.warn('⚠️ #detalleCircuito aún no disponible tras abrirFormulario()');
+        }
+      }, 50);
+    }
+
+    // 🪟 Abrir el modal visualmente
+    const modal = document.getElementById('modalRegistro');
+    if (modal) modal.style.display = 'block';
+
+    // 🎯 Foco visual al campo DEA
+    setTimeout(() => {
+      if (campoCodigoDEA) {
+        campoCodigoDEA.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  });
 }
 
 function mostrarFormulario() {
   abrirFormulario();
 }
 
-function eliminar(codigodea) {
-  alert("Confirmar eliminación de: " + codigodea);
-}
-
 // 🔹 VALIDACIÓN DE CÓDIGO DEA
+
 async function validarDEA() {
   const codigo = document.getElementById('codigodea').value.trim();
   const mensaje = document.getElementById('mensajeDEA');
   if (!codigo) return mensaje.textContent = '';
 
-  const res = await fetch(`/instituciones/listar`);
-  if (!res.ok) return mensaje.textContent = 'Error al validar Código DEA.';
+  try {
+    const res = await fetch(`/instituciones/listar`);
+    if (!res.ok) throw new Error('Error al validar');
 
-  const lista = await res.json();
-  const existe = lista.some(inst => inst.codigodea === codigo);
-  mensaje.textContent = existe ? '⚠️ Este Código DEA ya está registrado.' : '';
+    const lista = await res.json();
+    const existe = lista.some(inst => inst.codigodea === codigo);
+    mensaje.textContent = existe ? '⚠️ Este Código DEA ya está registrado.' : '';
+  } catch (err) {
+    mensaje.textContent = '❌ Error al validar Código DEA.';
+    console.error(err);
+  }
 }
 
 // 🔹 BÚSQUEDA Y SUGERENCIAS DE DIRECTOR
+
 async function buscarDirector() {
   const cedula = document.getElementById('ceduladirector').value.trim();
   if (!cedula) return;
 
-  const res = await fetch(`/directores/cedula/${cedula}`);
-  const data = res.ok ? await res.json() : null;
+  try {
+    const res = await fetch(`/directores/cedula/${cedula}`);
+    if (!res.ok) throw new Error();
 
-  document.getElementById('nombredirector').value = data?.nombresapellidosrep || '';
-  document.getElementById('telefonodirector').value = data?.telefono || '';
-  document.getElementById('correodirector').value = data?.correo || '';
+    const data = await res.json();
+    document.getElementById('nombredirector').value = data?.nombresapellidosrep || '';
+    document.getElementById('telefonodirector').value = data?.telefono || '';
+    document.getElementById('correodirector').value = data?.correo || '';
+  } catch {
+    document.getElementById('nombredirector').value = '';
+    document.getElementById('telefonodirector').value = '';
+    document.getElementById('correodirector').value = '';
+  }
 }
 
 async function sugerirDirector() {
@@ -48,35 +123,35 @@ async function sugerirDirector() {
   const datalist = document.getElementById('listaDirectores');
   if (texto.length < 3) return datalist.innerHTML = '';
 
-  const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+    const data = await res.json();
 
-  datalist.innerHTML = '';
-  data.forEach(d => {
-    const option = document.createElement('option');
-    option.value = d.cedula;
-    datalist.appendChild(option);
-  });
+    datalist.innerHTML = '';
+    data.forEach(d => {
+      const option = document.createElement('option');
+      option.value = d.cedula;
+      datalist.appendChild(option);
+    });
+  } catch (err) {
+    console.error('Error en sugerencia de directores:', err);
+  }
 }
 
 // 🔹 RESUMEN ESTADÍSTICO
-// 🔹 Mostrar resumen con validación, animación y fallback
 async function cargarResumen() {
-  
   const indicadores = {
     instituciones: document.getElementById('totalInstituciones'),
     dependencias: document.getElementById('totalDependencias'),
     niveles: document.getElementById('totalNiveles'),
-    directores: document.getElementById('totalDirectores')
+    directores: document.getElementById('totalDirectores'),
   };
 
-  // ❗ Validar existencia de elementos en el DOM
   if (!Object.values(indicadores).every(el => el)) {
-    console.warn('⚠️ Algunos elementos del resumen no existen en el DOM aún.');
+    console.warn('⚠️ Elementos de resumen no encontrados en el DOM.');
     return;
   }
 
-  // ⏳ Mostrar animación de carga
   for (let campo in indicadores) {
     indicadores[campo].textContent = '⌛';
   }
@@ -94,87 +169,102 @@ async function cargarResumen() {
 
     console.log('🔍 Ejecutando cargarResumen');
 
+    const res = await fetch('/instituciones/resumen');
     if (!res.ok) throw new Error('Error al obtener resumen');
-
     const data = await res.json();
-    console.log('📊 Resumen recibido:', data);
 
-    // 🎯 Función para animar los números (de 0 al valor final)
     const animarContador = (elemento, valorFinal) => {
-      let actual = 0;
-      const paso = Math.ceil(valorFinal / 25);
-      const intervalo = setInterval(() => {
-        actual += paso;
-        if (actual >= valorFinal) {
-          elemento.textContent = valorFinal;
-          clearInterval(intervalo);
+      const actual = parseInt(elemento.textContent) || 0;
+      const diferencia = valorFinal - actual;
+      const pasos = Math.abs(diferencia);
+      if (pasos === 0) return;
 
-          // ✨ Rebote visual al llegar al número final
+      let progreso = 0;
+      const paso = Math.sign(diferencia);
+      const intervalo = setInterval(() => {
+        progreso++;
+        const nuevoValor = actual + paso * progreso;
+        elemento.textContent = nuevoValor;
+        if (progreso >= pasos) {
+          clearInterval(intervalo);
           elemento.classList.add('pop');
           setTimeout(() => elemento.classList.remove('pop'), 400);
-        } else {
-          elemento.textContent = actual;
         }
       }, 20);
     };
 
-    // ⏫ Ejecutar animaciones
     animarContador(indicadores.instituciones, data.totalInstituciones ?? 0);
     animarContador(indicadores.dependencias, data.totalDependencias ?? 0);
     animarContador(indicadores.niveles, data.totalNiveles ?? 0);
     animarContador(indicadores.directores, data.totalDirectores ?? 0);
-
-    console.log('🌐 Solicitando resumen desde:', `${baseURL}/instituciones/resumen`);
-
-  } 
-  
-  catch (error) {
+  } catch (error) {
     console.error('❌ Resumen no disponible:', error);
     for (let campo in indicadores) {
       indicadores[campo].textContent = '—';
     }
-
-    //const aviso = document.getElementById('mensajeResumen');
-    //if (aviso) aviso.textContent = '⚠️ No se pudo obtener el resumen institucional.';
   }
 }
 
-// 🔹 CARGA DE DATOS PARA EDICIÓN
+// 🔹 CARGA PARA EDICIÓN
 function cargarInstitucionParaEditar(inst) {
-  // 1. Asegurar que el formulario esté visible ANTES de usar los inputs
-  mostrarFormulario(); // ✅ Activa el modal para que el DOM esté listo
+  abrirFormulario(inst); // ✅ Ya precarga todos los campos y circuito
+  buscarDirector();       // 🔁 Refresca los datos de referencia
 
-  // 2. Modo edición activado
-  document.getElementById('modoFormulario').value = 'editar';
-  document.getElementById('idInstitucionEditar').value = inst.codigodea;
+  const btnEliminar = document.getElementById('btnEliminarInstitucion');
+  if (btnEliminar && !btnEliminar.dataset.eliminarAsignado) {
+    btnEliminar.dataset.eliminarAsignado = 'true'; // evita múltiples listeners
 
-  // 3. Campo DEA: solo lectura
-  const campoDEA = document.getElementById('codigodea');
-  campoDEA.value = inst.codigodea || '';
-  campoDEA.readOnly = true; // 🔒 evitar cambios
+    btnEliminar.addEventListener('click', async () => {
+      const codigodea = document.getElementById('codigodea').value.trim();
 
-  // 4. Campos editables
-  document.getElementById('nombreplantel').value = inst.nombreplantel || '';
-  document.getElementById('codigodep').value = inst.codigodep || '';
-  document.getElementById('dependencia').value = inst.dependencia || '';
-  document.getElementById('niveledu').value = inst.niveledu || '';
-  document.getElementById('parroquia').value = inst.parroquia || '';
-  document.getElementById('ceduladirector').value = inst.ceduladirector || '';
-  document.getElementById('status').value = inst.status || '';
+      const { isConfirmed } = await Swal.fire({
+        title: '¿Eliminar institución?',
+        text: `Esto eliminará permanentemente el registro con DEA: ${codigodea}`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+      });
 
-  // 5. Forzar la carga de datos del director desde raclobatera
-  buscarDirector(); // 🔁 trae nombres, teléfono y correo referencial
+      if (!isConfirmed) return;
+
+      try {
+        const res = await fetch(`/instituciones/${codigodea}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error('No se pudo eliminar');
+
+        await Swal.fire('✅ Eliminado', 'La institución fue eliminada exitosamente.', 'success');
+
+        cerrarFormulario();
+        document.getElementById('formInstitucion').reset();
+        document.getElementById('modoFormulario').value = 'crear';
+        document.getElementById('idInstitucionEditar').value = '';
+        document.getElementById('codigodea').readOnly = false;
+        document.getElementById('mensajeDEA').textContent = '';
+        document.getElementById('detalleCircuito').textContent = '';
+
+        await cargarInstituciones();
+        await cargarResumen();
+      } catch (err) {
+        console.error('❌ Error al eliminar:', err);
+        Swal.fire('Error', 'Hubo un problema al eliminar la institución.', 'error');
+      }
+    });
+  }
 }
 
+// 🔓 Exponer como función global
 window.editar = async function (codigodea) {
   try {
     const res = await fetch(`/instituciones/${codigodea}`);
-    if (!res.ok) throw new Error("No se pudo cargar la institución");
+    if (!res.ok) throw new Error('No se pudo cargar la institución');
     const institucion = await res.json();
     cargarInstitucionParaEditar(institucion);
   } catch (err) {
-    console.error("❌ Error al editar institución:", err);
-    alert("🚨 No se pudo cargar la institución.");
+    console.error('❌ Error al editar institución:', err);
+    alert('🚨 No se pudo cargar la institución.');
   }
 };
 
@@ -195,26 +285,65 @@ async function cargarInstituciones() {
     fila.innerHTML = `
       <td>${inst.codigodea}</td>
       <td>${inst.nombreplantel}</td>
-      <td>${inst.nombredirector}</td>
-      <td>${inst.telefono}</td>
+      <td>${inst.nombredirector || ''}</td>
+      <td>${inst.telefono || ''}</td>
       <td>${inst.status}</td>
       <td></td>
     `;
 
     const btnEditar = document.createElement('button');
     btnEditar.textContent = '✏️';
+    btnEditar.title = 'Editar institución';
     btnEditar.addEventListener('click', () => editar(inst.codigodea));
 
-    const btnEliminar = document.createElement('button');
-    btnEliminar.textContent = '🗑️';
-    btnEliminar.addEventListener('click', () => eliminar(inst.codigodea));
-
-    const celda = fila.querySelector('td:last-child');
-    celda.appendChild(btnEditar);
-    celda.appendChild(btnEliminar);
-
+    fila.querySelector('td:last-child').appendChild(btnEditar);
     cuerpo.appendChild(fila);
   });
+}
+
+// 🔹 CARGAR CIRCUITOS EN EL SELECTOR
+async function cargarCircuitos() {
+  const res = await fetch('/circuitos/listar');
+  if (!res.ok) {
+    console.error('❌ Error al obtener circuitos:', await res.text());
+    return;
+  }
+
+  const data = await res.json();
+  const select = document.getElementById('codcircuitoedu');
+  if (!data || !select) {
+    console.warn("⚠️ No se pudo cargar circuitos: falta el select o los datos.");
+    if (select) select.innerHTML = '<option value="">Error al cargar</option>';
+    return;
+  }
+
+  select.innerHTML = '<option value="">Seleccione un circuito</option>';
+  data.forEach(c => {
+    const option = document.createElement('option');
+    option.value = c.codcircuitoedu;
+    option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
+    option.dataset.zona = c.zona || '';
+    option.dataset.supervisor = c.supervisor || '';
+    select.appendChild(option);
+  });
+
+  if (!select.dataset.listenerAsignado) {
+    select.addEventListener('change', () => {
+      const opcion = select.options[select.selectedIndex];
+      const zona = opcion?.dataset?.zona?.trim() || '';
+      const supervisor = opcion?.dataset?.supervisor?.trim() || '';
+
+      const detalleZona = document.getElementById('detalleCircuito');
+      if (detalleZona) {
+        detalleZona.textContent = zona ? `🗺️ Zona: ${zona}` : '';
+      }
+
+      const detalleSupervisor = document.getElementById('detalleSupervisor');
+      if (detalleSupervisor) {
+        detalleSupervisor.textContent = supervisor ? `👤 Supervisor: ${supervisor}` : '';
+      }
+    });
+  }
 }
 
 // 🔹 ENVÍO DEL FORMULARIO
@@ -240,7 +369,15 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
     parroquia: form.parroquia.value,
     ceduladirector: form.ceduladirector.value.trim(),
     status: form.status.value,
-    registrado: new Date().toISOString()
+    registrado: modo === 'editar'
+      ? form.registrado?.value || new Date().toISOString()
+      : new Date().toISOString(),
+
+    // Nuevos campos
+    codcircuitoedu: form.codcircuitoedu.value,
+    codestadistico: form.codestadistico.value.trim(),
+    codcenvot: form.codcenvot.value.trim(),
+    nombrecenvot: form.nombrecenvot.value.trim()
   };
 
   try {
@@ -254,12 +391,17 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
       alert(modo === 'editar'
         ? '✅ Institución modificada con éxito'
         : '✅ Institución registrada con éxito');
+
       cerrarFormulario();
       form.reset();
       document.getElementById('mensajeDEA').textContent = '';
       document.getElementById('modoFormulario').value = 'crear';
       document.getElementById('idInstitucionEditar').value = '';
+      document.getElementById('codigodea').readOnly = false;
+      document.getElementById('detalleCircuito').textContent = '';
+
       await cargarInstituciones();
+      await cargarResumen();
     } else {
       const errorTexto = await res.text();
       alert(`❌ Error al guardar: ${errorTexto}`);
@@ -271,7 +413,7 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
   }
 });
 
-// 🔓 EXPONER FUNCIONES USADAS EN EL HTML
+// 🔓 EXPONER FUNCIONES
 window.validarDEA = validarDEA;
 window.buscarDirector = buscarDirector;
 window.sugerirDirector = sugerirDirector;
