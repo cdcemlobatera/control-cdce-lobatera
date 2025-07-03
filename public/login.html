@@ -7,21 +7,20 @@
 
   <!-- Estilos externos -->
   <link rel="stylesheet" href="css/login.css" />
+  <link rel="stylesheet" href="css/validacion.css" />
 </head>
 <body>
-  <header>
-    <img src="/img/encabezado-cdce.jpeg" alt="CDCE Lobatera" />
-  </header>
+  <div class="fondo"></div>
 
   <div class="contenedor">
     <form id="login-form">
       <h3>🔐 Ingreso al sistema</h3>
 
       <label for="cedula">Cédula:</label>
-      <input id="cedula" required />
+      <input id="cedula" required placeholder="V12345678" />
 
       <label for="clave">Clave:</label>
-      <input id="clave" type="password" required />
+      <input id="clave" type="password" required placeholder="Mínimo 6 caracteres" />
 
       <button type="submit">Ingresar</button>
       <div id="mensaje"></div>

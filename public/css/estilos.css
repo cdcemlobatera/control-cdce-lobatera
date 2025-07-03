@@ -147,3 +147,23 @@ tbody tr:hover {
   font-size: 0.9em;
   color: #333;
 }
+
+.mensaje-validacion {
+  color: #e67e22;
+  font-weight: bold;
+  font-size: 0.9em;
+  margin-top: 4px;
+  display: block;
+}
+
+.resaltado-error {
+  border: 2px solid red;
+  animation: agitar 0.3s ease;
+}
+@keyframes agitar {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}

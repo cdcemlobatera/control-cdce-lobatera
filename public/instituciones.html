@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,201 +8,255 @@
 
   <!-- 💡 Librerías externas -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
 
-  <!-- 🖌️ Estilos internos -->
-
+  <!-- 🎨 Estilos internos -->
   <link rel="stylesheet" href="css/estilos.css">
-  
+  <link rel="stylesheet" href="css/filtros.css">
+  <link rel="stylesheet" href="css/estilosTarjetas.css">
 </head>
 
 <body>
-  <h1>Instituciones Registradas</h1>
+  <h1 class="titulo-seccion">📋 Instituciones Registradas</h1>
 
-   <div class="resumen-container">
+  <div class="botones-navegacion">
+    <button onclick="window.history.back()">⬅️ Volver</button>
+    <button onclick="window.location.href='/'">🏠 Inicio</button>
+    <button onclick="abrirFormulario()" class="boton-principal">➕ Registrar nueva institución</button>
 
-    <div class="card">
+    <div class="filtros-avanzados">
+      <select id="filtroTurno">
+        <option value="">Todos los turnos</option>
+        <option value="Mañana">Mañana</option>
+        <option value="Tarde">Tarde</option>
+        <option value="Mañana Tarde">Mañana Tarde</option>
+      </select>
+
+      <select id="filtroDependencia">
+        <option value="">Todas las dependencias</option>
+        <option value="Nacional">Nacional</option>
+        <option value="Estadal">Estadal</option>
+        <option value="Municipal">Municipal</option>
+        <option value="Privada">Privada</option>
+      </select>
+
+      <select id="filtroNivel">
+        <option value="">Todos los Niveles</option>
+        <option value="Maternal">Maternal</option>
+        <option value="Inicial">Inicial</option>
+        <option value="Maternal Inicial">Maternal Inicial</option>
+        <option value="Primaria">Primaria</option>
+        <option value="Inicial Primaria">Inicial Primaria</option>
+        <option value="Media General">Media General</option>
+        <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+        <option value="Especial">Especial</option>
+        <option value="Adultos">Adultos</option>
+      </select>
+
+      <select id="filtroCircuito">
+        <option value="">Todos los circuitos</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="cargandoTabla" class="spinner-container">
+    <div class="spinner"></div>
+    <p>Estamos Procesando la Información, ¡Gracias por su espera! 🌀</p>
+  </div>
+
+  <table id="tablaInstituciones" class="display" style="width:100%">
+    <thead></thead>
+  </table>
+
+  <div class="resumen-container">
+    <div class="card tarjeta-institucional">
       <div class="icon">🏫</div>
-      <strong id="totalInstituciones" class="resumen-numero">—</strong><br>
+      <strong id="totalInstituciones" class="resumen-numero">—</strong>
       <span>Instituciones</span>
     </div>
-    <div class="card">
+
+    <div class="card tarjeta-institucional">
       <div class="icon">🏛️</div>
-      <strong id="totalDependencias" class="resumen-numero">—</strong><br>
+      <strong id="totalDependencias" class="resumen-numero">—</strong>
       <span>Dependencias</span>
     </div>
-    <div class="card">
+
+    <div class="card tarjeta-institucional">
       <div class="icon">📚</div>
-      <strong id="totalNiveles" class="resumen-numero">—</strong><br>
+      <strong id="totalNiveles" class="resumen-numero">—</strong>
       <span>Niveles</span>
     </div>
-    <div class="card">
+
+    <div class="card tarjeta-institucional">
       <div class="icon">👤</div>
-      <strong id="totalDirectores" class="resumen-numero">—</strong><br>
+      <strong id="totalDirectores" class="resumen-numero">—</strong>
       <span>Directores únicos</span>
     </div>
 
-    <p id="mensajeResumen" style="color: #e74c3c; font-weight: bold;"></p>
-    
-   </div>
-
-   
-
-  <div style="margin-top: 1rem;">
-    <button onclick="window.history.back()">⬅️ Volver</button>
-    <button onclick="window.location.href='/'">🏠 Inicio</button>
+    <p id="mensajeResumen" class="mensaje-resumen"></p>
   </div>
-  
-  <table>
-    <thead>
-      <tr>
-        <th>Código DEA</th>
-        <th>Nombre</th>
-        <th>Director</th>
-        <th>Teléfono</th>
-        <th>Status</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaInstituciones">
-      <tr><td colspan="5">Cargando...</td></tr>
-    </tbody>
-  </table>
-   
-  <!-- 🔽 Botón para abrir modal -->
-  <button onclick="abrirFormulario()" style="margin-top: 1rem;">➕ Registrar nueva institución</button>
- 
+
+  <!-- Lote 2 -->
+
   <!-- 📦 Modal del formulario -->
-  <div id="modalRegistro" style="
-  display: none;
-  position: fixed;
-  top: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  padding: 1.5rem;
-  box-shadow: 0 0 10px #aaa;
-  max-width: 600px;
-  width: 90%;
-  z-index: 999;
-  max-height: 90vh;
-  overflow-y: auto;">
-  
-    <h2>Datos de la Institución</h2>
+  <div id="modalRegistro" style="display: none; position: fixed; top: 5%; left: 50%; transform: translateX(-50%);
+background: #fff; padding: 1.5rem; box-shadow: 0 0 10px #aaa; max-width: 600px; width: 90%; z-index: 999;
+max-height: 90vh; overflow-y: auto;">
+
+    <h2 id="tituloFormulario">Datos de la Institución</h2>
     <form id="formInstitucion">
-  <fieldset style="margin-bottom:1rem;">
-    <legend>Datos del Plantel</legend>
+      <fieldset style="margin-bottom:1rem;">
+        <legend>Datos del Plantel</legend>
 
-    <label>Código DEA:</label><br>
-    <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" required><br><br>
-    <span id="mensajeDEA" style="color:crimson; font-size:0.9em;"></span>
+        <label>Código DEA:</label><br>
+        <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" placeholder="Requerido"><br><br>
+        <span id="mensajeDEA" class="mensaje-validacion"></span>
 
-    <label>Nombre del Plantel:</label><br>
-    <input type="text" name="nombreplantel" id="nombreplantel" required><br><br>
+        <label>Nombre del Plantel:</label><br>
+        <input type="text" id="nombreplantel" name="nombreplantel" placeholder="Requerido">
+        <span id="mensajeNombre" class="mensaje-validacion"></span>
 
-    <label>Código de Dependencia:</label><br>
-    <input type="text" name="codigodep" id="codigodep"><br><br>
+        <label>Eponimo Anterior:</label><br>
+        <input type="text" id="eponimoanterior" name="eponimoanterior" placeholder="No Aplica">
 
-    <label>Dependencia:</label><br>
-    <select name="dependencia" id="dependencia" required>
-      <option value="">Seleccione</option>
-      <option value="Nacional">Nacional</option>
-      <option value="Estadal">Estadal</option>
-      <option value="Municipal">Municipal</option>
-      <option value="Privada">Privada</option>
-    </select><br><br>
+        <label>Código de Dependencia:</label><br>
+        <input type="text" name="codigodep" id="codigodep" placeholder="Requerido"><br><br>
+        <span id="mensajeCodDependencia" class="mensaje-validacion"></span>
 
-    <label>Nivel Educativo:</label><br>
-    <select name="niveledu" id="niveledu" required>
-      <option value="">Seleccione</option>
-      <option value="Maternal">Maternal</option>
-      <option value="Inicial">Inicial</option>
-      <option value="Maternal Inicial">Maternal Inicial</option>
-      <option value="Primaria">Primaria</option>
-      <option value="Inicial Primaria">Inicial Primaria</option>
-      <option value="Media General">Media General</option>
-      <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
-    </select><br><br>
+        <label>Dependencia *:</label><br>
+        <select name="dependencia" id="dependencia">
+          <option value="">Seleccione</option>
+          <option value="Nacional">Nacional</option>
+          <option value="Estadal">Estadal</option>
+          <option value="Municipal">Municipal</option>
+          <option value="Privada">Privada</option>
+        </select><br><br>
+        <span id="mensajeDependencia" class="mensaje-validacion"></span>
 
-    <label>Parroquia:</label><br>
-    <select name="parroquia" id="parroquia" required>
-      <option value="">Seleccione</option>
-      <option value="LOBATERA">LOBATERA</option>
-      <option value="CONSTITUCION">CONSTITUCIÓN</option>
-    </select><br><br>
+        <label>Nivel Educativo *:</label><br>
+        <select name="niveledu" id="niveledu">
+          <option value="">Seleccione</option>
+          <option value="Maternal">Maternal</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Maternal Inicial">Maternal Inicial</option>
+          <option value="Primaria">Primaria</option>
+          <option value="Inicial Primaria">Inicial Primaria</option>
+          <option value="Media General">Media General</option>
+          <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+          <option value="Especial">Especial</option>
+          <option value="Adultos">Adultos</option>
+        </select><br><br>
+        <span id="mensajeNivel" class="mensaje-validacion"></span>
 
-    <label for="codcircuitoedu">Circuito Educativo</label>
-    <select id="codcircuitoedu" name="codcircuitoedu" required>
-      <option value="">Seleccione un circuito</option>
-    </select>
+        <label for="turno">Turno Laborable *:</label>
+        <select id="turno" name="turno">
+          <option value="">Seleccione</option>
+          <option value="Mañana">Mañana</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Mañana Tarde">Mañana Tarde</option>
+        </select>
+        <span id="mensajeturno" class="mensaje-validacion"></span>
 
-    <p id="detalleCircuito" class="detalle-texto"></p>
-    <p id="detalleSupervisor" class="detalle-texto"></p>
+        <label>Parroquia *:</label><br>
+        <select name="parroquia" id="parroquia">
+          <option value="">Seleccione</option>
+          <option value="LOBATERA">LOBATERA</option>
+          <option value="CONSTITUCION">CONSTITUCIÓN</option>
+        </select><br><br>
+        <span id="mensajeParroquia" class="mensaje-validacion"></span>
 
-    <label for="codestadistico">Código Estadístico</label>
-    <input type="text" id="codestadistico" name="codestadistico" placeholder="Ej: EST-56789">
+        <label for="codcircuitoedu">Circuito Educativo: *</label>
+        <select id="codcircuitoedu" name="codcircuitoedu">
+          <option value="">Seleccione un circuito</option>
+        </select>
+        <span id="mensajeCircuito" class="mensaje-validacion"></span>
 
-    <label for="codcenvot">Código Centro de Votación</label>
-    <input type="text" id="codcenvot" name="codcenvot" placeholder="Ej: CENVOT-123">
+        <p id="detalleCircuito" class="detalle-texto"></p>
+        <p id="detalleSupervisor" class="detalle-texto"></p>
 
-    <label for="nombrecenvot">Nombre Centro de Votación</label>
-    <input type="text" id="nombrecenvot" name="nombrecenvot" placeholder="Ej: UE La Democracia (CNE)">
+        <label for="codestadistico">Código Estadístico</label>
+        <input type="text" id="codestadistico" name="codestadistico" placeholder="de poseer Código estadístico">
 
-  </fieldset>
+        <label for="codcenvot">Código Centro de Votación</label>
+        <input type="text" id="codcenvot" name="codcenvot" placeholder="Ingrese si el plantel es Centro Electoral">
 
-  <button type="button" id="btnEliminarInstitucion" class="peligro">Eliminar institución 🗑️</button>
+        <label for="nombrecenvot">Nombre Centro de Votación</label>
+        <input type="text" id="nombrecenvot" name="nombrecenvot" placeholder="Nombre ante el (CNE)">
+      </fieldset>
 
-  <fieldset>
-    <legend>Datos del Director</legend>
+      <!-- 🗑️ Botón de eliminación (visibilidad controlada por JS) -->
+      <button type="button" id="btnEliminarInstitucion" class="peligro" style="display: none;">
+        Eliminar institución 🗑️
+      </button>
 
-    <label>Cédula del Director:</label><br>
-    <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()" onblur="buscarDirector()" list="listaDirectores" required autocomplete="off"><br>
-    <datalist id="listaDirectores"></datalist><br>
-  </fieldset>
+      <!-- Lote 3 -->
 
-  <fieldset disabled class="fieldset-lectura">
-    <legend>
-      <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
-    </legend>
+      <fieldset>
+        <legend>Datos del Director</legend>
 
-    <label for="nombredirector">Nombre:</label>
-    <input id="nombredirector" type="text" class="lectura" readonly>
+        <label>Cédula del Director *:</label><br>
+        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()"
+          onblur="buscarDirector()" list="listaDirectores" autocomplete="off"><br>
+        <datalist id="listaDirectores"></datalist><br>
+        <span id="mensajeDirector" class="mensaje-validacion"></span>
+      </fieldset>
 
-    <label for="telefonodirector">Teléfono:</label>
-    <input id="telefonodirector" type="text" class="lectura" readonly>
+      <fieldset disabled class="fieldset-lectura">
+        <legend>
+          <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
+        </legend>
 
-    <label for="correodirector">Correo:</label>
-    <input id="correodirector" type="email" class="lectura" readonly>
+        <label for="nombredirector">Nombre:</label>
+        <input id="nombredirector" type="text" class="lectura" readonly>
 
-    <p class="mensaje-informativo">
-      📌 Estos datos provienen del registro del personal y se actualizan desde la sección <strong>“Personal”</strong>.
-    </p>
-    </fieldset>
+        <label for="telefonodirector">Teléfono:</label>
+        <input id="telefonodirector" type="text" class="lectura" readonly>
 
-    <label>Status:</label><br>
-    <select name="status" id="status">
-      <option value="Activo">Activo</option>
-      <option value="Inactivo">Inactivo</option>
-    </select><br><br>
+        <label for="correodirector">Correo:</label>
+        <input id="correodirector" type="email" class="lectura" readonly>
 
-    <input type="hidden" name="registrado" value="">
-    <input type="hidden" id="modoFormulario" value="crear" />
-    <input type="hidden" id="idInstitucionEditar" />
+        <p class="mensaje-informativo">
+          📌 Estos datos provienen del registro del personal y se actualizan desde la sección
+          <strong>“Personal”</strong>.
+        </p>
+      </fieldset>
 
-    <button type="submit">Guardar Institución</button>
-    <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
-  </form>
+      <label>Status *:</label><br>
+      <select name="status" id="status">
+        <option value="Activo">Activo</option>
+        <option value="Inactivo">Inactivo</option>
+      </select><br><br>
+      <span id="mensajeStatus" class="mensaje-validacion"></span>
 
+      <input type="hidden" name="registrado" value="">
+      <input type="hidden" id="modoFormulario" value="crear" />
+      <input type="hidden" id="idInstitucionEditar" />
+
+      <button type="submit">Guardar Institución</button>
+      <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
+    </form>
   </div>
 
+  <!-- //Lote 4
+
+  Librerías externas necesarias -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <!-- Inicialización del cliente Supabase -->
   <script>
     window.supabase = supabase.createClient(
       'https://ymtagfdcrejmuyqflvif.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltdGFnZmRjcmVqbXV5cWZsdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzI3NTUsImV4cCI6MjA2NTg0ODc1NX0._5V445n-Bpy7_Ahvxwc3CM9f3aRLzBVtiGoMjce-N2I'
     );
   </script>
-  <script src="js/instituciones.js"></script>
 
+  <!-- Scripts internos y módulos CDCE -->
+  <script src="js/utils.js"></script>
+  <script type="module" src="js/tablasCDCE.js"></script>
+  <script type="module" src="js/instituciones.js"></script>
 </body>
+
 </html>
