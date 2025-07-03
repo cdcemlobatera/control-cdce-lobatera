@@ -2,124 +2,42 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Registrar nuevo usuario</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2em;
-      background: #f4f4f4;
-    }
-    form {
-      background: white;
-      padding: 20px;
-      max-width: 400px;
-      margin: auto;
-      border-radius: 6px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      margin-bottom: 12px;
-    }
-    button {
-      background: #2e7d32;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1b5e20;
-    }
-    #mensaje {
-      margin-top: 10px;
-      font-size: 0.9em;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activar acceso — CDCE</title>
+  <link rel="stylesheet" href="css/panel.css" />
 </head>
 <body>
-  <form id="registro-form" onsubmit="event.preventDefault(); registrarUsuario();">
-    <h3>➕ Registrar nuevo usuario</h3>
+  <header>
+    <h1>Activar acceso para personal registrado</h1>
+    <a href="panel.html">← Volver al panel</a>
+  </header>
 
-    <label for="cedula">Cédula:</label>
-    <input id="cedula" onblur="buscarNombre()" required />
+  <section class="bloque">
+    <form id="formRegistroUsuario">
+      <label>Cédula (ya debe existir en el personal):</label>
+      <input id="cedula" required placeholder="Ej: 12345678" />
 
-    <label for="nombre">Nombre:</label>
-    <input id="nombre" readonly style="background-color: #f0f0f0;" />
+      <label>Rol del sistema:</label>
+      <select id="rol">
+        <option value="director">Director</option>
+        <option value="docente">Docente</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="admin">Administrador</option>
+        <option value="ministerio">Ministerio</option>
+      </select>
 
-    <label for="clave">Clave:</label>
-    <input id="clave" type="password" required />
+      <label>Clave de acceso:</label>
+      <input id="clave" type="password" required placeholder="Mínimo 6 caracteres" />
 
-    <label for="confirmar">Confirmar clave:</label>
-    <input id="confirmar" type="password" required />
+      <label>Código DEA (opcional):</label>
+      <input id="codigoDea" placeholder="Ej: PD12345678" />
 
-    <label for="rol">Rol:</label>
-    <select id="rol" required>
-      <option value="">Seleccione rol</option>
-      <option value="admin">Administrador</option>
-      <option value="director">Director</option>
-      <option value="personal">Personal</option>
-    </select>
+      <button type="submit">Activar acceso</button>
+      <div id="mensajeRegistro"></div>
+    </form>
+  </section>
 
-    <button type="submit">Registrar usuario</button>
-    <div id="mensaje"></div>
-  </form>
-
-  <script>
-    async function buscarNombre() {
-      const cedula = document.getElementById('cedula').value.trim();
-      const nombre = document.getElementById('nombre');
-      nombre.value = '';
-
-      if (!cedula) return;
-
-      const res = await fetch('/directores/cedula/' + cedula);
-      if (res.ok) {
-        const datos = await res.json();
-        nombre.value = datos.nombresapellidosrep || '';
-      } else {
-        nombre.value = 'No encontrado';
-      }
-    }
-
-    async function registrarUsuario() {
-      const cedula = document.getElementById('cedula').value.trim();
-      const clave = document.getElementById('clave').value;
-      const confirmar = document.getElementById('confirmar').value;
-      const rol = document.getElementById('rol').value;
-      const mensaje = document.getElementById('mensaje');
-      mensaje.textContent = '';
-
-      if (clave !== confirmar) {
-        mensaje.textContent = '❌ Las claves no coinciden.';
-        mensaje.style.color = 'red';
-        return;
-      }
-
-      const res = await fetch('/usuarios/nuevo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cedula, clave, rol })
-      });
-
-      if (res.ok) {
-        mensaje.textContent = '✅ Usuario registrado exitosamente.';
-        mensaje.style.color = 'green';
-        document.getElementById('registro-form').reset();
-        document.getElementById('nombre').value = '';
-      } else {
-        const err = await res.json();
-        mensaje.textContent = `❌ ${err.error || 'Error al registrar usuario'}`;
-        mensaje.style.color = 'red';
-      }
-    }
-  </script>
+  <script src="js/registro-usuario.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

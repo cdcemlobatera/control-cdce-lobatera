@@ -1,17 +1,25 @@
 {
   "name": "control-cdce-lobatera",
   "version": "1.0.0",
+  "description": "Sistema de gestión educativa del CDCE Lobatera",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "license": "MIT",
+  "type": "commonjs",
   "dependencies": {
-    "express-session": "^1.17.3",
-    "bcryptjs": "^2.4.3",
-    "express": "^4.18.2",
-    "dotenv": "^16.0.3",
     "@supabase/supabase-js": "^2.39.5",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "uuid": "^11.1.0",
     "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "prettier": "^3.6.2"
   }
 }

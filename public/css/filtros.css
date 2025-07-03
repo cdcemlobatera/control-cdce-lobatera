@@ -1,0 +1,91 @@
+.filtros-avanzados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filtros-avanzados select {
+    padding: 0.4rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: #f9f9f9;
+}
+
+th:last-child {
+  background-color: #f5f5f5;
+  text-align: center;
+  font-weight: bold;
+}
+
+
+
+/* Ocultar Turno, Dependencia, Nivel, Circuito (índices 5–8) 
+th:nth-child(5),
+th:nth-child(6),
+th:nth-child(7),
+th:nth-child(8),
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(7),
+td:nth-child(8) {
+  display: none;
+}*/
+
+/* Ocultar por títulos específicos, si están en el mismo orden SIEMPRE 
+tbody td:nth-child(5),
+thead th:nth-child(6),
+tbody td:nth-child(6),
+thead th:nth-child(7),
+tbody td:nth-child(7),
+thead th:nth-child(8),
+tbody td:nth-child(8) {
+  display: none;
+}
+thead th:nth-child(5),*/
+
+
+.spinner-container {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: bold;
+}
+
+@keyframes girar {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+.spinner {
+  margin: 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #ddd;
+  border-top: 4px solid #2a8;
+  border-radius: 50%;
+  animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.boton-editar {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.boton-editar:hover {
+  transform: scale(1.2);
+}
+
+.dataTables_wrapper {
+  overflow-x: auto;
+}
