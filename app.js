@@ -1,19 +1,28 @@
-// ─── 📦 DEPENDENCIAS Y CONFIGURACIÓN ─────────────────────────────
-const express = require('express');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+// 📦 MÓDULOS Y CONFIGURACIÓN INICIAL
 require('dotenv').config();
+const express = require('express');
+const session = require('express-session');
+const path = require('path'); // ← Esta es la línea que faltaba
+const bcrypt = require('bcryptjs');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+// 🔗 Supabase
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-const bcrypt = require('bcryptjs');
-const session = require('express-session');
+// 🔧 Middlewares globales
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+app.use(session({
+  secret: 'supersecreto-educativo',
+  resave: false,
+  saveUninitialized: false
+}));
+
 
 // ─── 🔐 MIDDLEWARES ──────────────────────────────────────────────
 app.use(express.json());
@@ -24,7 +33,7 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── 🔑 AUTENTICACIÓN Y SESIÓN ──────────────────────────────────
+// ─── 🔑 AUTENTICACIÓN Y SESIÓN (USANDO TABLA `personal`) ────────────────
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
 
@@ -33,8 +42,8 @@ app.post('/login', async (req, res) => {
   }
 
   const { data: usuario, error } = await supabase
-    .from('usuarios')
-    .select('clave, rol')
+    .from('personal')
+    .select('cedula, clave, rol, estatus, codigo_dea')
     .eq('cedula', cedula)
     .single();
 
@@ -47,8 +56,13 @@ app.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Credenciales inválidas' });
   }
 
-  req.session.cedula = cedula;
+  if (usuario.estatus !== 'ACTIVO') {
+    return res.status(403).json({ error: 'Usuario inhabilitado' });
+  }
+
+  req.session.cedula = usuario.cedula;
   req.session.rol = usuario.rol;
+  req.session.codigo_dea = usuario.codigo_dea || null;
 
   res.json({
     mensaje: 'Acceso correcto',
@@ -57,43 +71,64 @@ app.post('/login', async (req, res) => {
   });
 });
 
+// 🔒 Cierre de sesión
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/login.html');
   });
 });
 
+// 👁️ Verificar sesión activa
 app.get('/usuario/activo', (req, res) => {
   res.json({
     cedula: req.session?.cedula || null,
-    rol: req.session?.rol || null
+    rol: req.session?.rol || null,
+    codigo_dea: req.session?.codigo_dea || null
   });
 });
 
-// ─── 👤 DIRECTORES: RAC LOBATERA ────────────────────────────────
-app.get('/directores/cedula/:cedula', async (req, res) => {
-  const { cedula } = req.params;
-  const { data, error } = await supabase
-    .from('raclobatera')
-    .select('nombresapellidosrep, telefono, correo')
+app.post('/registro-usuario', async (req, res) => {
+  if (req.session.rol !== 'admin' && req.session.rol !== 'ministerio') {
+    return res.status(403).json({ error: 'Acceso restringido para activar usuarios' });
+  }
+
+  const { cedula, rol, clave, codigo_dea } = req.body;
+
+  if (!cedula || !rol || !clave || clave.length < 6) {
+    return res.status(400).json({ error: 'Datos incompletos o clave inválida' });
+  }
+
+  const { data: persona, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos')
     .eq('cedula', cedula)
     .single();
 
-  if (error || !data) return res.status(404).json({ error: 'Director no encontrado' });
-  res.json(data);
+  if (error || !persona) {
+    return res.status(404).json({ error: 'La cédula no está registrada en el personal institucional' });
+  }
+
+  const claveCifrada = await bcrypt.hash(clave, 10);
+
+  const { error: errorUpdate } = await supabase
+    .from('personal')
+    .update({
+      rol,
+      clave: claveCifrada,
+      estatus: 'ACTIVO',
+      codigo_dea: codigo_dea || null
+    })
+    .eq('cedula', cedula);
+
+  if (errorUpdate) {
+    console.error('❌ Error al activar usuario:', errorUpdate);
+    return res.status(500).json({ error: 'No se pudo actualizar el acceso' });
+  }
+
+  res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
-app.get('/directores/buscar', async (req, res) => {
-  const search = req.query.q || '';
-  const { data, error } = await supabase
-    .from('raclobatera')
-    .select('cedula, nombresapellidosrep, telefono, correo')
-    .ilike('nombresapellidosrep', `%${search}%`)
-    .limit(10);
-
-  if (error) return res.status(500).json({ error });
-  res.json(data);
-});
+//lote 2
 
 // ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
 
@@ -135,7 +170,7 @@ app.patch('/instituciones/:codigodea', async (req, res) => {
   res.status(200).json({ mensaje: 'Institución actualizada exitosamente' });
 });
 
-// Listar instituciones (para la tabla)
+// Listar instituciones
 app.get('/instituciones/listar', async (req, res) => {
   const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
@@ -148,9 +183,10 @@ app.get('/instituciones/listar', async (req, res) => {
   const resultados = await Promise.all(
     instituciones.map(async inst => {
       const { data: director } = await supabase
-        .from('raclobatera')
-        .select('nombresapellidosrep, telefono')
+        .from('personal') // Cambio clave: antes 'raclobatera'
+        .select('nombresapellidos, telefono')
         .eq('cedula', inst.ceduladirector)
+        .eq('rol', 'director')
         .single();
 
       return {
@@ -158,7 +194,7 @@ app.get('/instituciones/listar', async (req, res) => {
         nombreplantel: inst.nombreplantel,
         ceduladirector: inst.ceduladirector,
         status: inst.status,
-        nombredirector: director?.nombresapellidosrep || 'Sin registrar',
+        nombredirector: director?.nombresapellidos || 'Sin registrar',
         telefono: director?.telefono || 'No disponible'
       };
     })
@@ -184,23 +220,21 @@ app.get('/instituciones/resumen', async (req, res) => {
     const niveles = new Set(data.map(i => i.niveledu).filter(Boolean));
     const directores = new Set(data.map(i => i.ceduladirector).filter(Boolean));
 
-    console.log('🎒 Registros obtenidos:', data.length, data[0]);
-
     res.json({
       totalInstituciones,
       totalDependencias: dependencias.size,
       totalNiveles: niveles.size,
-      totalDirectores: directores.size     
+      totalDirectores: directores.size
     });
   } catch (e) {
     console.error('❌ Error inesperado en resumen:', e);
     res.status(500).json({ error: 'Error inesperado al generar resumen' });
   }
-
 });
 
+//lote 3-1
 
-// Detalle de institución (editar)
+// ─── 🔍 Detalle de institución (con director desde `personal`) ─────────────
 app.get('/instituciones/:id', async (req, res) => {
   const { data: institucion, error } = await supabase
     .from('instituciones')
@@ -213,14 +247,15 @@ app.get('/instituciones/:id', async (req, res) => {
   }
 
   const { data: director } = await supabase
-    .from('raclobatera')
-    .select('nombresapellidosrep, telefono, correo')
+    .from('personal')
+    .select('nombresapellidos, telefono, correo')
     .eq('cedula', institucion.ceduladirector)
+    .eq('rol', 'director')
     .single();
 
   res.json({
     ...institucion,
-    nombredirector: director?.nombresapellidosrep || '',
+    nombredirector: director?.nombresapellidos || '',
     telefonodirector: director?.telefono || '',
     correodirector: director?.correo || ''
   });
@@ -240,15 +275,17 @@ app.delete('/instituciones/:codigodea', async (req, res) => {
     return res.status(500).json({ error: 'No se pudo eliminar la institución' });
   }
 
-  res.status(204).send(); // Sin contenido: éxito
+  res.status(204).send(); // Éxito sin contenido
 });
 
-// Página principal → login
+// lote 3-2
+
+// Página principal → redirige al login si no hay sesión
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Ruta protegida para acceder al panel
+// Ruta protegida para acceder al panel principal
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
     return res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -256,20 +293,8 @@ app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
+//lote 3-3
 
-server.on('error', err => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`⚠️ El puerto ${PORT} ya está en uso. Render aún no ha liberado el anterior.`);
-    process.exit(1);
-  } else {
-    console.error('❌ Error al iniciar el servidor:', err);
-  }
-});
-
-//Circuitos educativos listar
 app.get('/circuitos/listar', async (req, res) => {
   const { data: circuitos, error: errorCircuitos } = await supabase
     .from('circuitoseducativos')
@@ -286,13 +311,14 @@ app.get('/circuitos/listar', async (req, res) => {
       let nombreSupervisor = 'Sin asignar';
       if (circuito.cedulasupervisor) {
         const { data: supervisor } = await supabase
-          .from('raclobatera')
-          .select('nombresapellidosrep')
+          .from('personal')
+          .select('nombresapellidos')
           .eq('cedula', circuito.cedulasupervisor)
+          .eq('rol', 'supervisor')
           .single();
 
-        if (supervisor?.nombresapellidosrep) {
-          nombreSupervisor = supervisor.nombresapellidosrep;
+        if (supervisor?.nombresapellidos) {
+          nombreSupervisor = supervisor.nombresapellidos;
         }
       }
 
@@ -306,4 +332,15 @@ app.get('/circuitos/listar', async (req, res) => {
   );
 
   res.json(resultados);
+});
+
+//lote 4
+
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// 🛫 Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
 });
