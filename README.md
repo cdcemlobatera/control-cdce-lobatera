@@ -42,3 +42,11 @@ Este sistema fue posible gracias al trabajo comprometido del equipo del CDCE Lob
 ---
 
 **Repositorio mantenido por:** [@cdcemlobatera](https://github.com/cdcemlobatera)
+
+
+
+Este sistema fue posible gracias al trabajo comprometido del equipo del CDCE Lobatera, con enfoque en eficiencia, empatía y sostenibilidad técnica.
+
+---
+
+**Repositorio mantenido por:** [@cdcemlobatera](https://github.com/cdcemlobatera)
