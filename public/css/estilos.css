@@ -167,3 +167,24 @@ tbody tr:hover {
   75% { transform: translateX(-2px); }
   100% { transform: translateX(0); }
 }
+
+.detalle-info {
+  margin-top: 10px;
+  padding: 4px;
+  max-width: 100%;
+  display: block;
+}
+
+
+#detalleSupervisor {
+  background: #f4faff;
+  border-left: 4px solid #2E86C1;
+  padding: 10px;
+  border-radius: 5px;
+  color: #154360;
+  line-height: 1.4;
+}
+#detalleSupervisor a {
+  color: #1F618D;
+  text-decoration: none;
+}

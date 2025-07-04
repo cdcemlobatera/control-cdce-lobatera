@@ -294,7 +294,6 @@ app.get('/panel', (req, res) => {
 });
 
 //lote 3-3
-
 app.get('/circuitos/listar', async (req, res) => {
   const { data: circuitos, error: errorCircuitos } = await supabase
     .from('circuitoseducativos')
@@ -309,16 +308,23 @@ app.get('/circuitos/listar', async (req, res) => {
   const resultados = await Promise.all(
     circuitos.map(async circuito => {
       let nombreSupervisor = 'Sin asignar';
-      if (circuito.cedulasupervisor) {
-        const { data: supervisor } = await supabase
+
+      console.log(`🧩 Circuito: ${circuito.codcircuitoedu}, Cédula recibida: "${circuito.cedulasupervisor}"`);
+
+      if (circuito.cedulasupervisor && circuito.cedulasupervisor.trim()) {
+        const { data: supervisor, error: errorSupervisor } = await supabase
           .from('personal')
-          .select('nombresapellidos')
-          .eq('cedula', circuito.cedulasupervisor)
-          .eq('rol', 'supervisor')
+          .select('nombresapellidos, telefono, correo')
+          .eq('cedula', circuito.cedulasupervisor.trim())
+          .eq('cargo_funcional', 'supervisor')
           .single();
 
-        if (supervisor?.nombresapellidos) {
-          nombreSupervisor = supervisor.nombresapellidos;
+        if (supervisor) {
+          nombreSupervisor = {
+            nombresapellidos: supervisor.nombresapellidos,
+            telefono: supervisor.telefono || 'No registrado',
+            correo: supervisor.correo || 'No disponible'
+          };
         }
       }
 

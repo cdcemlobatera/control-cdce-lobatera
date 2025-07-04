@@ -48,6 +48,21 @@ function abrirFormulario(institucion = null) {
       if (selCircuito) {
         selCircuito.value = institucion.codcircuitoedu;
         selCircuito.dispatchEvent(new Event('change'));
+
+        // 💡 Acoplamiento del detalle del supervisor aquí mismo:
+        const opcion = selCircuito.options[selCircuito.selectedIndex];
+        const supervisorData = opcion?.dataset?.supervisor ? JSON.parse(opcion.dataset.supervisor) : {};
+        const dSupervisor = document.getElementById('detalleSupervisor');
+
+        if (dSupervisor && supervisorData.nombresapellidos) {
+          dSupervisor.innerHTML = `
+            👤 <strong>${supervisorData.nombresapellidos}</strong><br>
+            📞 ${supervisorData.telefono}<br>
+            📧 <a href="mailto:${supervisorData.correo}">${supervisorData.correo}</a>
+          `;
+        } else {
+          dSupervisor.textContent = '👤 Sin asignar';
+        }
       }
     } else {
       const detalle = document.getElementById('detalleCircuito');
@@ -56,8 +71,8 @@ function abrirFormulario(institucion = null) {
 
     document.getElementById('modalRegistro').style.display = 'block';
     document.getElementById('codigodea').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    actualizarVisibilidadBotonEliminar(); // 👈 Control de visibilidad del botón 🗑️
-    asignarListenerEliminarSiHaceFalta(); // 👈 activa 🗑️ desde el modo Editar
+    actualizarVisibilidadBotonEliminar();
+    asignarListenerEliminarSiHaceFalta();
   });
 }
 
@@ -195,7 +210,8 @@ async function cargarCircuitos() {
       option.value = c.codcircuitoedu;
       option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
       option.dataset.zona = c.zona || '';
-      option.dataset.supervisor = c.supervisor || '';
+      option.dataset.supervisor = JSON.stringify(c.supervisor || {});
+
       select.appendChild(option);
     });
 
