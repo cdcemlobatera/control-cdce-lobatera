@@ -6,19 +6,16 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const mensaje = document.getElementById('mensaje');
   const boton = e.submitter;
 
-  // Limpiar estado previo
   mensaje.textContent = '';
   mensaje.classList.remove('error');
   boton.disabled = true;
   boton.textContent = "Verificando...";
 
-  // Validación de formato de cédula
   if (!/^V\d{7,8}$/.test(cedula.toUpperCase())) {
     mostrarError("⚠️ Formato de cédula inválido. Usa 'V12345678'.", mensaje, boton);
     return;
   }
 
-  // Validación de longitud de clave
   if (clave.length < 6) {
     mostrarError("🔐 La clave debe tener al menos 6 caracteres.", mensaje, boton);
     return;
@@ -44,7 +41,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   }
 });
 
-// Función auxiliar para mostrar errores y resetear el botón
 function mostrarError(texto, mensajeElem, botonElem) {
   mensajeElem.textContent = texto;
   mensajeElem.classList.add('error');

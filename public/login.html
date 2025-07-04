@@ -1,33 +1,26 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ingreso al sistema</title>
-
-  <!-- Estilos externos -->
   <link rel="stylesheet" href="css/login.css" />
   <link rel="stylesheet" href="css/validacion.css" />
 </head>
 <body>
   <div class="fondo"></div>
-
   <div class="contenedor">
     <form id="login-form">
       <h3>🔐 Ingreso al sistema</h3>
-
       <label for="cedula">Cédula:</label>
       <input id="cedula" required placeholder="V12345678" />
-
       <label for="clave">Clave:</label>
       <input id="clave" type="password" required placeholder="Mínimo 6 caracteres" />
-
       <button type="submit">Ingresar</button>
       <div id="mensaje"></div>
     </form>
   </div>
-
-  <!-- Script externo -->
   <script src="js/login.js"></script>
 </body>
 </html>
