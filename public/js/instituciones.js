@@ -194,6 +194,7 @@ async function cargarResumen() {
 
 // 🔹 CARGAR CIRCUITOS PARA FORMULARIO
 
+
 async function cargarCircuitos() {
   try {
     const res = await fetch('/circuitos/listar');
@@ -431,7 +432,7 @@ window.eliminarInstitucion = async function (codigodea) {
     document.getElementById('idInstitucionEditar').value = '';
     document.getElementById('codigodea').readOnly = false;
     document.getElementById('mensajeDEA').textContent = '';
-    document.getElementById('detalleCircuito').textContent = '';
+    document.getElementById('').textContent = '';
     await cargarResumen?.();
     location.reload();
   } catch (err) {
