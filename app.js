@@ -328,6 +328,7 @@ app.get('/circuitos/listar', async (req, res) => {
         }
       }
 
+      // prueba de regreso
       return {
         codcircuitoedu: circuito.codcircuitoedu,
         nombrecircuito: circuito.nombrecircuito,

@@ -194,7 +194,6 @@ async function cargarResumen() {
 
 // 🔹 CARGAR CIRCUITOS PARA FORMULARIO
 
-
 async function cargarCircuitos() {
   try {
     const res = await fetch('/circuitos/listar');
