@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // 🔗 Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-// 🔧 MIDDLEWARES
+// 🔧 Middlewares globales
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,7 +24,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// ─── 🔑 AUTENTICACIÓN Y SESIÓN (USANDO TABLA `personal`) ────────────────
+// ─── 🔐 AUTENTICACIÓN Y SESIÓN ────────────────────────────────
 
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
@@ -63,14 +63,12 @@ app.post('/login', async (req, res) => {
   });
 });
 
-// 🔒 Cierre de sesión
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/login.html');
   });
 });
 
-// 👁️ Verificar sesión activa
 app.get('/usuario/activo', (req, res) => {
   res.json({
     cedula: req.session?.cedula || null,
@@ -79,7 +77,6 @@ app.get('/usuario/activo', (req, res) => {
   });
 });
 
-// 🧑‍💻 Activación de usuarios institucionales
 app.post('/registro-usuario', async (req, res) => {
   if (!['admin', 'ministerio'].includes(req.session.rol)) {
     return res.status(403).json({ error: 'Acceso restringido para activar usuarios' });
@@ -121,7 +118,7 @@ app.post('/registro-usuario', async (req, res) => {
   res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
-// Lote 2
+//Lote 2
 
 // ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
 
@@ -164,7 +161,7 @@ app.patch('/instituciones/:codigodea', async (req, res) => {
   res.status(200).json({ mensaje: 'Institución actualizada exitosamente' });
 });
 
-// Listar instituciones (validación DEA + tabla + datos director)
+// Listar instituciones para validación y tabla dinámica
 app.get('/instituciones/listar', async (req, res) => {
   const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
@@ -198,7 +195,7 @@ app.get('/instituciones/listar', async (req, res) => {
   res.json(resultados);
 });
 
-// 🔢 Resumen estadístico de instituciones
+// 🔢 Resumen estadístico para tarjetas animadas
 app.get('/instituciones/resumen', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -227,9 +224,9 @@ app.get('/instituciones/resumen', async (req, res) => {
   }
 });
 
-//Lote 3
+//Lote A3
 
-// 🔍 Detalle de institución individual
+// 🔍 Detalle de institución individual con datos del director
 app.get('/instituciones/:id', async (req, res) => {
   const { data: institucion, error } = await supabase
     .from('instituciones')
@@ -270,15 +267,10 @@ app.delete('/instituciones/:codigodea', async (req, res) => {
     return res.status(500).json({ error: 'No se pudo eliminar la institución' });
   }
 
-  res.status(204).send(); // Éxito sin contenido
+  res.status(204).send();
 });
 
-// 🚪 Entrada principal
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// 🔐 Panel protegido
+// 🔐 Ruta protegida para acceder al panel principal
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
     return res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -300,7 +292,7 @@ app.get('/circuitos/listar', async (req, res) => {
 
   const resultados = await Promise.all(
     circuitos.map(async circuito => {
-      let supervisorData = null;
+      let supervisorData = {};
 
       if (circuito.cedulasupervisor?.trim()) {
         const { data: supervisor } = await supabase
@@ -323,7 +315,7 @@ app.get('/circuitos/listar', async (req, res) => {
         codcircuitoedu: circuito.codcircuitoedu,
         nombrecircuito: circuito.nombrecircuito,
         zona: circuito.zona || '',
-        supervisor: supervisorData || {}
+        supervisor: supervisorData
       };
     })
   );
@@ -331,16 +323,16 @@ app.get('/circuitos/listar', async (req, res) => {
   res.json(resultados);
 });
 
-// Lote 4-1
+// Lote 4
 
-// 🔎 Buscar director por cédula
+// 🔎 Buscar director por cédula (mayúsculas/minúsculas)
 app.get('/directores/cedula/:cedula', async (req, res) => {
   const cedula = req.params.cedula;
 
   const { data: director, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-    .eq('cedula', cedula)
+    .ilike('cedula', cedula) // ← permite buscar sin importar el caso
     .eq('rol', 'director')
     .single();
 
@@ -351,20 +343,20 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
   res.json(director);
 });
 
-// 💬 Sugerencia de director por nombre o cédula parcial
+// 🧠 Sugerencia de director por nombre o cédula parcial
 app.get('/directores/buscar', async (req, res) => {
-  const query = req.query.q?.toLowerCase();
+  const query = req.query.q?.trim();
   if (!query || query.length < 3) {
-    return res.json([]); // No sugerencias para textos cortos
+    return res.json([]); // Se ignoran textos muy cortos
   }
 
   const { data: posibles, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos AS nombresapellidosrep')
     .eq('rol', 'director')
-    .ilike('nombresapellidos', `%${query}%`);
+    .or(`ilike(nombresapellidos, %${query}%),ilike(cedula, %${query}%)`);
 
-  if (error) {
+  if (error || !Array.isArray(posibles)) {
     console.error('❌ Error al buscar director:', error);
     return res.status(500).json({ error: 'Error al buscar director' });
   }
@@ -372,9 +364,7 @@ app.get('/directores/buscar', async (req, res) => {
   res.json(posibles);
 });
 
-//Lote 4-2
-
-// 🌐 Redirección a login desde raíz
+// 🌐 Redirección al login desde raíz
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
