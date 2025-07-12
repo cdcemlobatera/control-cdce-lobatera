@@ -261,18 +261,30 @@ async function buscarDirectoresSugeridos(texto) {
 
     if (!Array.isArray(data)) return;
 
+    const yaVistos = new Set();
+
     data.forEach(director => {
+      if (yaVistos.has(director.cedula)) return;
+      yaVistos.add(director.cedula);
+
       const item = document.createElement('li');
       item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+      item.style.cursor = 'pointer';
+
       item.onclick = () => {
-        document.getElementById('ceduladirector').value = director.cedula;
-        buscarDirector(); // ← rellena nombre, teléfono y correo
+        const campoCedula = document.getElementById('ceduladirector');
+        campoCedula.value = director.cedula;
+
+        // 🧠 Forzar blur para activar autocompletado
+        campoCedula.dispatchEvent(new Event('blur'));
+
         lista.innerHTML = '';
       };
+
       lista.appendChild(item);
     });
 
-    if (data.length === 0) {
+    if (lista.childElementCount === 0) {
       const noResults = document.createElement('li');
       noResults.textContent = 'No se encontraron coincidencias';
       lista.appendChild(noResults);
@@ -282,7 +294,7 @@ async function buscarDirectoresSugeridos(texto) {
   }
 }
 
-// 🪄 Exponer al HTML si usas type="module"
+// 🪄 Exponer funciones al HTML si usas type="module"
 window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
 
 function limpiarSugerencias() {
