@@ -1,8 +1,9 @@
+//app.js Lote 1
 // 📦 MÓDULOS Y CONFIGURACIÓN INICIAL
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const path = require('path'); // ← Esta es la línea que faltaba
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -12,10 +13,10 @@ const PORT = process.env.PORT || 3000;
 // 🔗 Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-// 🔧 Middlewares globales
+// 🔧 MIDDLEWARES
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
   secret: 'supersecreto-educativo',
@@ -23,17 +24,8 @@ app.use(session({
   saveUninitialized: false
 }));
 
-
-// ─── 🔐 MIDDLEWARES ──────────────────────────────────────────────
-app.use(express.json());
-app.use(session({
-  secret: 'mi-clave-segura',
-  resave: false,
-  saveUninitialized: true
-}));
-app.use(express.static(path.join(__dirname, 'public')));
-
 // ─── 🔑 AUTENTICACIÓN Y SESIÓN (USANDO TABLA `personal`) ────────────────
+
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
 
@@ -87,8 +79,9 @@ app.get('/usuario/activo', (req, res) => {
   });
 });
 
+// 🧑‍💻 Activación de usuarios institucionales
 app.post('/registro-usuario', async (req, res) => {
-  if (req.session.rol !== 'admin' && req.session.rol !== 'ministerio') {
+  if (!['admin', 'ministerio'].includes(req.session.rol)) {
     return res.status(403).json({ error: 'Acceso restringido para activar usuarios' });
   }
 
@@ -128,7 +121,7 @@ app.post('/registro-usuario', async (req, res) => {
   res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
-//lote 2
+// Lote 2
 
 // ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
 
@@ -136,6 +129,7 @@ app.post('/registro-usuario', async (req, res) => {
 app.post('/instituciones/nueva', async (req, res) => {
   try {
     const datos = req.body;
+
     const { data, error } = await supabase
       .from('instituciones')
       .insert([datos]);
@@ -170,7 +164,7 @@ app.patch('/instituciones/:codigodea', async (req, res) => {
   res.status(200).json({ mensaje: 'Institución actualizada exitosamente' });
 });
 
-// Listar instituciones
+// Listar instituciones (validación DEA + tabla + datos director)
 app.get('/instituciones/listar', async (req, res) => {
   const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
@@ -183,8 +177,8 @@ app.get('/instituciones/listar', async (req, res) => {
   const resultados = await Promise.all(
     instituciones.map(async inst => {
       const { data: director } = await supabase
-        .from('personal') // Cambio clave: antes 'raclobatera'
-        .select('nombresapellidos, telefono')
+        .from('personal')
+        .select('nombresapellidos, telefono, correo')
         .eq('cedula', inst.ceduladirector)
         .eq('rol', 'director')
         .single();
@@ -195,7 +189,8 @@ app.get('/instituciones/listar', async (req, res) => {
         ceduladirector: inst.ceduladirector,
         status: inst.status,
         nombredirector: director?.nombresapellidos || 'Sin registrar',
-        telefono: director?.telefono || 'No disponible'
+        telefonodirector: director?.telefono || 'No disponible',
+        correodirector: director?.correo || ''
       };
     })
   );
@@ -232,9 +227,9 @@ app.get('/instituciones/resumen', async (req, res) => {
   }
 });
 
-//lote 3-1
+//Lote 3
 
-// ─── 🔍 Detalle de institución (con director desde `personal`) ─────────────
+// 🔍 Detalle de institución individual
 app.get('/instituciones/:id', async (req, res) => {
   const { data: institucion, error } = await supabase
     .from('instituciones')
@@ -261,7 +256,7 @@ app.get('/instituciones/:id', async (req, res) => {
   });
 });
 
-// 🗑️ Eliminar institución
+// 🗑️ Eliminar institución por código DEA
 app.delete('/instituciones/:codigodea', async (req, res) => {
   const { codigodea } = req.params;
 
@@ -278,14 +273,12 @@ app.delete('/instituciones/:codigodea', async (req, res) => {
   res.status(204).send(); // Éxito sin contenido
 });
 
-// lote 3-2
-
-// Página principal → redirige al login si no hay sesión
+// 🚪 Entrada principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Ruta protegida para acceder al panel principal
+// 🔐 Panel protegido
 app.get('/panel', (req, res) => {
   if (!req.session || !req.session.rol) {
     return res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -293,7 +286,7 @@ app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
-//lote 3-3
+// 🧭 Carga de circuitos con supervisor asociado
 app.get('/circuitos/listar', async (req, res) => {
   const { data: circuitos, error: errorCircuitos } = await supabase
     .from('circuitoseducativos')
@@ -301,18 +294,16 @@ app.get('/circuitos/listar', async (req, res) => {
     .order('codcircuitoedu', { ascending: true });
 
   if (errorCircuitos) {
-    console.error('❌ Error al cargar circuitos:', errorCircuitos);
+    console.error('❌ Error al obtener circuitos:', errorCircuitos);
     return res.status(500).json({ error: 'Error al obtener circuitos' });
   }
 
   const resultados = await Promise.all(
     circuitos.map(async circuito => {
-      let nombreSupervisor = 'Sin asignar';
+      let supervisorData = null;
 
-      console.log(`🧩 Circuito: ${circuito.codcircuitoedu}, Cédula recibida: "${circuito.cedulasupervisor}"`);
-
-      if (circuito.cedulasupervisor && circuito.cedulasupervisor.trim()) {
-        const { data: supervisor, error: errorSupervisor } = await supabase
+      if (circuito.cedulasupervisor?.trim()) {
+        const { data: supervisor } = await supabase
           .from('personal')
           .select('nombresapellidos, telefono, correo')
           .eq('cedula', circuito.cedulasupervisor.trim())
@@ -320,7 +311,7 @@ app.get('/circuitos/listar', async (req, res) => {
           .single();
 
         if (supervisor) {
-          nombreSupervisor = {
+          supervisorData = {
             nombresapellidos: supervisor.nombresapellidos,
             telefono: supervisor.telefono || 'No registrado',
             correo: supervisor.correo || 'No disponible'
@@ -328,12 +319,11 @@ app.get('/circuitos/listar', async (req, res) => {
         }
       }
 
-      // prueba de regreso
       return {
         codcircuitoedu: circuito.codcircuitoedu,
         nombrecircuito: circuito.nombrecircuito,
         zona: circuito.zona || '',
-        supervisor: nombreSupervisor
+        supervisor: supervisorData || {}
       };
     })
   );
@@ -341,8 +331,50 @@ app.get('/circuitos/listar', async (req, res) => {
   res.json(resultados);
 });
 
-//lote 4
+// Lote 4-1
 
+// 🔎 Buscar director por cédula
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula;
+
+  const { data: director, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
+    .eq('cedula', cedula)
+    .eq('rol', 'director')
+    .single();
+
+  if (error || !director) {
+    return res.status(404).json({ error: 'Director no encontrado' });
+  }
+
+  res.json(director);
+});
+
+// 💬 Sugerencia de director por nombre o cédula parcial
+app.get('/directores/buscar', async (req, res) => {
+  const query = req.query.q?.toLowerCase();
+  if (!query || query.length < 3) {
+    return res.json([]); // No sugerencias para textos cortos
+  }
+
+  const { data: posibles, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos AS nombresapellidosrep')
+    .eq('rol', 'director')
+    .ilike('nombresapellidos', `%${query}%`);
+
+  if (error) {
+    console.error('❌ Error al buscar director:', error);
+    return res.status(500).json({ error: 'Error al buscar director' });
+  }
+
+  res.json(posibles);
+});
+
+//Lote 4-2
+
+// 🌐 Redirección a login desde raíz
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
