@@ -223,24 +223,29 @@ async function buscarDirector() {
 }
 
 async function sugerirDirector() {
-  const input = document.getElementById('ceduladirector');
-  const texto = input.value.trim();
+  const texto = document.getElementById('ceduladirector').value.trim();
   const datalist = document.getElementById('listaDirectores');
-  if (texto.length < 3) return datalist.innerHTML = '';
 
   try {
-    const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+    const res = await fetch(`/directores/buscar?q=${texto}`);
     const data = await res.json();
-    datalist.innerHTML = '';
 
-    data.forEach(d => {
+    // 👇 Protección contra errores de formato
+    if (!Array.isArray(data)) {
+      datalist.innerHTML = '';
+      return;
+    }
+
+    datalist.innerHTML = '';
+    data.forEach(director => {
       const option = document.createElement('option');
-      option.value = d.cedula;
-      option.label = `${d.nombresapellidosrep} (${d.cedula})`;
+      option.value = director.cedula;
+      option.label = director.nombresapellidosrep;
       datalist.appendChild(option);
     });
-  } catch (err) {
-    console.error('Error en sugerencia de directores:', err);
+  } catch (e) {
+    console.error('Error en sugerencia de directores:', e);
+    datalist.innerHTML = '';
   }
 }
 

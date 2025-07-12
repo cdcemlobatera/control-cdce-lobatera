@@ -325,14 +325,14 @@ app.get('/circuitos/listar', async (req, res) => {
 
 // Lote 4
 
-// 🔎 Buscar director por cédula (mayúsculas/minúsculas)
+// 🔎 Buscar director por cédula (V12642865, sin importar mayúsculas)
 app.get('/directores/cedula/:cedula', async (req, res) => {
   const cedula = req.params.cedula;
 
-  const { data: director, error } = await supabase
+  const { data, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-    .ilike('cedula', cedula) // ← permite buscar sin importar el caso
+    .or(`ilike(cedula, ${cedula}),eq(cedula, ${cedula})`)
     .eq('rol', 'director')
     .single();
 
@@ -341,6 +341,25 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
   }
 
   res.json(director);
+});
+
+// 🧠 Sugerencia por nombre o cédula parcial
+app.get('/directores/buscar', async (req, res) => {
+  const query = req.query.q?.trim();
+  if (!query || query.length < 3) return res.json([]);
+
+  const { data: posibles, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos AS nombresapellidosrep')
+    .eq('rol', 'director')
+    .or(`ilike(nombresapellidos, %${query}%),ilike(cedula, %${query}%)`);
+
+  if (error || !Array.isArray(posibles)) {
+    console.error('❌ Ruta /directores/buscar falló:', error);
+    return res.status(500).json([]); // ← devuelve array vacío para evitar fallos en el frontend
+  }
+
+  res.json(posibles);
 });
 
 // 🧠 Sugerencia de director por nombre o cédula parcial
