@@ -348,18 +348,23 @@ app.get('/directores/buscar', async (req, res) => {
   const query = req.query.q?.trim();
   if (!query || query.length < 3) return res.json([]);
 
-  const { data: posibles, error } = await supabase
-    .from('personal')
-    .select('cedula, nombresapellidos AS nombresapellidosrep')
-    .eq('rol', 'director')
-    .or(`ilike(nombresapellidos, %${query}%),ilike(cedula, %${query}%)`);
+  try {
+    const { data: posibles, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos AS nombresapellidosrep')
+      .eq('rol', 'director')
+      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
 
-  if (error || !Array.isArray(posibles)) {
-    console.error('❌ Ruta /directores/buscar falló:', error);
-    return res.status(500).json([]); // ← devuelve array vacío para evitar fallos en el frontend
+    if (error || !Array.isArray(posibles)) {
+      console.error('❌ Ruta /directores/buscar falló:', error);
+      return res.status(500).json([]);
+    }
+
+    res.json(posibles);
+  } catch (e) {
+    console.error('❌ Excepción en /directores/buscar:', e);
+    res.status(500).json([]);
   }
-
-  res.json(posibles);
 });
 
 // 🧠 Sugerencia de director por nombre o cédula parcial
