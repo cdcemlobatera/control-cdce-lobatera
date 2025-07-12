@@ -326,48 +326,79 @@ app.get('/circuitos/listar', async (req, res) => {
 // Lote 4
 
 // 🔎 Buscar director por cédula (V12642865, sin importar mayúsculas)
-app.get('/directores/cedula/:cedula', async (req, res) => {
-  const cedula = req.params.cedula?.trim(); // ← limpieza de espacios ocultos
+// 🔍 Función sugerida para búsqueda parcial y selección de directores
+async function buscarDirectoresSugeridos(texto) {
+  const lista = document.getElementById('listaSugerenciasDirector');
+  lista.innerHTML = '';
 
-  const { data, error } = await supabase
-    .from('personal')
-    .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-    .eq('cedula', cedula) // ← búsqueda exacta, no flexible
-    .eq('rol', 'director')
-    .single(); // ← ya que esperamos un único resultado literal
-
-  if (error || !data) {
-    console.warn(`❌ No se encontró director con la cédula: ${cedula}`);
-    return res.status(404).json({ error: 'Director no encontrado' });
-  }
-
-  console.log('✅ Director encontrado:', data);
-  res.json(data);
-});
-
-// 🧠 Sugerencia por nombre o cédula parcial (sin alias)
-app.get('/directores/buscar', async (req, res) => {
-  const query = req.query.q?.trim();
-  if (!query || query.length < 3) return res.json([]);
+  if (!texto || texto.trim().length < 3) return;
 
   try {
-    const { data: posibles, error } = await supabase
-      .from('personal')
-      .select('cedula, nombresapellidos')
-      .eq('rol', 'director')
-      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
+    const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
+    const data = await res.json();
 
-    if (error || !Array.isArray(posibles)) {
-      console.error('❌ Ruta /directores/buscar falló:', error);
-      return res.status(500).json([]);
+    if (!Array.isArray(data)) return;
+
+    const yaVistos = new Set();
+
+    data.forEach(director => {
+      if (yaVistos.has(director.cedula)) return;
+      yaVistos.add(director.cedula);
+
+      const item = document.createElement('li');
+      item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+      item.style.cursor = 'pointer';
+
+      item.onclick = () => {
+        const campoCedula = document.getElementById('ceduladirector');
+        campoCedula.value = director.cedula;
+
+        const modo = document.getElementById('modoFormulario')?.value || 'crear';
+        if (modo === 'crear') {
+          mostrarDatosDirector(director);
+          document.getElementById('mensajeDirector').textContent = '✔ Director precargado desde búsqueda visual.';
+        } else {
+          campoCedula.dispatchEvent(new Event('blur')); // activa backend en edición
+        }
+
+        lista.innerHTML = '';
+      };
+
+      lista.appendChild(item);
+    });
+
+    if (lista.childElementCount === 0) {
+      const noResults = document.createElement('li');
+      noResults.textContent = 'No se encontraron coincidencias';
+      lista.appendChild(noResults);
     }
-
-    res.json(posibles);
   } catch (e) {
-    console.error('❌ Excepción en /directores/buscar:', e);
-    res.status(500).json([]);
+    console.error('❌ Error en buscarDirectoresSugeridos:', e);
   }
-});
+}
+
+// 🧠 Búsqueda directa por cédula (usado en modo edición)
+async function buscarDirector() {
+  const cedula = document.getElementById('ceduladirector').value.trim();
+  if (!cedula) return;
+
+  try {
+    const res = await fetch(`/directores/cedula/${cedula}`);
+    const data = await res.json();
+
+    if (data?.cedula && data?.nombresapellidosrep) {
+      mostrarDatosDirector(data);
+      document.getElementById('mensajeDirector').textContent = '✔ Director cargado correctamente desde base institucional.';
+    } else {
+      mostrarDatosDirector({});
+      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
+    }
+  } catch (e) {
+    console.error('❌ Error al buscar director:', e);
+    mostrarDatosDirector({});
+    document.getElementById('mensajeDirector').textContent = '❌ Error al conectar con base de datos.';
+  }
+}
 
 if (!PORT) {
   console.warn('⚠️ La variable de entorno PORT no está definida. Usando 10000 por defecto.');

@@ -195,7 +195,6 @@ max-height: 90vh; overflow-y: auto;">
 
       <!-- 🔍 Buscador independiente de director -->
 
-
       <fieldset style="margin-top:1rem;">
         <legend><i class="fa fa-search" aria-hidden="true"></i> Buscar director por nombre o cédula parcial</legend>
 
@@ -209,12 +208,13 @@ max-height: 90vh; overflow-y: auto;">
       <fieldset>
         <legend>Datos del Director</legend>
 
-        <label>Cédula del Director *:</label><br>
-        <input type="text" id="ceduladirector" name="ceduladirector"
-          oninput="if (this.value.length >= 3) sugerirDirector();" onblur="buscarDirector()" list="listaDirectores"
-          autocomplete="off"><br>
+        <label for="ceduladirector">Cédula del Director *:</label><br>
+        <input type="text" id="ceduladirector" name="ceduladirector" list="listaDirectores" autocomplete="off" required
+          oninput="if (this.value.length >= 3) sugerirDirector();" onblur="buscarDirector()" /><br>
+
         <datalist id="listaDirectores"></datalist><br>
-        <span id="mensajeDirector" class="mensaje-validacion"></span>
+
+        <span id="mensajeDirector" class="info-director"></span>
       </fieldset>
 
       <!-- 📋 Datos auto-rellenables -->
