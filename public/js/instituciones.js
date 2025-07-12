@@ -1,3 +1,4 @@
+// Instituciones.js
 // 🔹 IMPORTACIONES
 import { validarCampos } from './utils/validacion.js';
 import { crearTablaConFiltros } from './tablasCDCE.js';
@@ -22,6 +23,25 @@ function actualizarVisibilidadBotonEliminar() {
   btnEliminar.style.display = modo === 'editar' ? 'inline-block' : 'none';
 }
 
+function mostrarDetalleSupervisor() {
+  const selCircuito = document.getElementById('codcircuitoedu');
+  const dSupervisor = document.getElementById('detalleSupervisor');
+  if (!selCircuito || !dSupervisor) return;
+
+  const opcion = selCircuito.options[selCircuito.selectedIndex];
+  const supervisorData = opcion?.dataset?.supervisor ? JSON.parse(opcion.dataset.supervisor) : {};
+
+  if (supervisorData.nombresapellidos) {
+    dSupervisor.innerHTML = `
+      👤 <strong>${supervisorData.nombresapellidos}</strong><br>
+      📞 ${supervisorData.telefono}<br>
+      📧 <a href="mailto:${supervisorData.correo}">${supervisorData.correo}</a>
+    `;
+  } else {
+    dSupervisor.textContent = '👤 Sin asignar';
+  }
+}
+
 function abrirFormulario(institucion = null) {
   const form = document.getElementById('formInstitucion');
   if (!form) return;
@@ -40,29 +60,17 @@ function abrirFormulario(institucion = null) {
   document.getElementById('codigodea').readOnly = (modo === 'editar');
 
   cargarCircuitos().then(() => {
+    const selCircuito = document.getElementById('codcircuitoedu');
+    selCircuito?.addEventListener('change', mostrarDetalleSupervisor);
+
     if (institucion) {
       for (const [clave, valor] of Object.entries(institucion)) {
         if (form[clave]) form[clave].value = valor || '';
       }
-      const selCircuito = document.getElementById('codcircuitoedu');
+
       if (selCircuito) {
         selCircuito.value = institucion.codcircuitoedu;
         selCircuito.dispatchEvent(new Event('change'));
-
-        // 💡 Acoplamiento del detalle del supervisor aquí mismo:
-        const opcion = selCircuito.options[selCircuito.selectedIndex];
-        const supervisorData = opcion?.dataset?.supervisor ? JSON.parse(opcion.dataset.supervisor) : {};
-        const dSupervisor = document.getElementById('detalleSupervisor');
-
-        if (dSupervisor && supervisorData.nombresapellidos) {
-          dSupervisor.innerHTML = `
-            👤 <strong>${supervisorData.nombresapellidos}</strong><br>
-            📞 ${supervisorData.telefono}<br>
-            📧 <a href="mailto:${supervisorData.correo}">${supervisorData.correo}</a>
-          `;
-        } else {
-          dSupervisor.textContent = '👤 Sin asignar';
-        }
       }
     } else {
       const detalle = document.getElementById('detalleCircuito');
@@ -76,7 +84,7 @@ function abrirFormulario(institucion = null) {
   });
 }
 
-// lote 2
+// Lote 2
 
 function asignarListenerEliminarSiHaceFalta() {
   const btnEliminar = document.getElementById('btnEliminarInstitucion');
@@ -138,8 +146,8 @@ async function sugerirDirector() {
 
     data.forEach(d => {
       const option = document.createElement('option');
-      option.value = d.cedula; // lo que se insertará en el input
-      option.label = `${d.nombresapellidosrep} (${d.cedula})`; // lo que verá el usuario
+      option.value = d.cedula;
+      option.label = `${d.nombresapellidosrep} (${d.cedula})`;
       datalist.appendChild(option);
     });
   } catch (err) {
@@ -147,122 +155,7 @@ async function sugerirDirector() {
   }
 }
 
-//Lote 3
-
-// 🔹 RESUMEN ESTADÍSTICO
-
-async function cargarResumen() {
-  const refs = {
-    instituciones: document.getElementById('totalInstituciones'),
-    dependencias: document.getElementById('totalDependencias'),
-    niveles: document.getElementById('totalNiveles'),
-    directores: document.getElementById('totalDirectores')
-  };
-
-  for (const el of Object.values(refs)) el.textContent = '⌛';
-
-  try {
-    const res = await fetch('/instituciones/resumen');
-    const data = await res.json();
-
-    const animar = (el, final) => {
-      let valor = parseInt(el.textContent) || 0;
-      const paso = (final - valor) / 20;
-      let contador = 0;
-
-      const intervalo = setInterval(() => {
-        contador++;
-        el.textContent = Math.round(valor + paso * contador);
-        if (contador >= 20) {
-          el.textContent = final;
-          el.classList.add('pop');
-          clearInterval(intervalo);
-          setTimeout(() => el.classList.remove('pop'), 400);
-        }
-      }, 20);
-    };
-
-    animar(refs.instituciones, data.totalInstituciones ?? 0);
-    animar(refs.dependencias, data.totalDependencias ?? 0);
-    animar(refs.niveles, data.totalNiveles ?? 0);
-    animar(refs.directores, data.totalDirectores ?? 0);
-  } catch (err) {
-    console.error('❌ Resumen no disponible:', err);
-    for (const el of Object.values(refs)) el.textContent = '—';
-  }
-}
-
-// 🔹 CARGAR CIRCUITOS PARA FORMULARIO
-
-async function cargarCircuitos() {
-  try {
-    const res = await fetch('/circuitos/listar');
-    if (!res.ok) throw new Error(await res.text());
-
-    const datos = await res.json();
-    const select = document.getElementById('codcircuitoedu');
-    if (!select) return;
-
-    select.innerHTML = '<option value="">Seleccione un circuito</option>';
-
-    datos.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.codcircuitoedu;
-      option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
-      option.dataset.zona = c.zona || '';
-      option.dataset.supervisor = JSON.stringify(c.supervisor || {});
-
-      select.appendChild(option);
-    });
-
-    if (!select.dataset.listenerAsignado) {
-      select.dataset.listenerAsignado = 'true';
-      select.addEventListener('change', () => {
-        const opcion = select.options[select.selectedIndex];
-        const zona = opcion?.dataset?.zona || '';
-        const supervisor = opcion?.dataset?.supervisor || '';
-
-        const dZona = document.getElementById('detalleCircuito');
-        const dSupervisor = document.getElementById('detalleSupervisor');
-
-        if (dZona) dZona.textContent = zona ? `🗺️ Zona: ${zona}` : '';
-        if (dSupervisor) dSupervisor.textContent = supervisor ? `👤 Supervisor: ${supervisor}` : '';
-      });
-    }
-  } catch (err) {
-    console.error('❌ Error al cargar circuitos:', err);
-    const select = document.getElementById('codcircuitoedu');
-    if (select) select.innerHTML = '<option value="">Error al cargar</option>';
-  }
-}
-
-// 🔹 CARGAR CIRCUITOS PARA FILTRO
-
-async function cargarCircuitosFiltro() {
-  const filtro = document.getElementById('filtroCircuito');
-  if (!filtro) return;
-
-  const { data: circuitos, error } = await supabase
-    .from('circuitoseducativos')
-    .select('codcircuitoedu, nombrecircuito')
-    .order('nombrecircuito', { ascending: true });
-
-  if (error) {
-    console.error('❌ Error al cargar circuitos para filtro:', error.message);
-    return;
-  }
-
-  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
-
-  for (const circuito of circuitos) {
-    const opt = document.createElement('option');
-    opt.value = circuito.codcircuitoedu;
-    opt.textContent = circuito.nombrecircuito;
-    filtro.appendChild(opt);
-  }
-}
-
-//Lote 4
+// Lote 3
 
 document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -330,7 +223,7 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
   }
 });
 
-//Lote 5
+// Lote 4
 
 // 🔹 CARGA Y RENDER DE TABLA DINÁMICA
 
@@ -395,6 +288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('cargandoTabla').style.display = 'none';
 });
 
+// Lote 5
+
 // 🔹 FUNCIONES EXPUESTAS AL CONTEXTO GLOBAL
 
 window.abrirFormulario = abrirFormulario;
@@ -431,7 +326,7 @@ window.eliminarInstitucion = async function (codigodea) {
     document.getElementById('idInstitucionEditar').value = '';
     document.getElementById('codigodea').readOnly = false;
     document.getElementById('mensajeDEA').textContent = '';
-    document.getElementById('').textContent = '';
+    document.getElementById('detalleSupervisor').textContent = '';
     await cargarResumen?.();
     location.reload();
   } catch (err) {
