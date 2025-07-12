@@ -264,14 +264,11 @@ async function buscarDirectoresSugeridos(texto) {
     data.forEach(director => {
       const item = document.createElement('li');
       item.textContent = `${director.nombresapellidos} (${director.cedula})`;
-      item.style.cursor = 'pointer';
-
       item.onclick = () => {
         document.getElementById('ceduladirector').value = director.cedula;
         buscarDirector(); // ← rellena nombre, teléfono y correo
         lista.innerHTML = '';
       };
-
       lista.appendChild(item);
     });
 
@@ -284,6 +281,9 @@ async function buscarDirectoresSugeridos(texto) {
     console.error('❌ Error en buscarDirectoresSugeridos:', e);
   }
 }
+
+// 🪄 Exponer al HTML si usas type="module"
+window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
 
 function limpiarSugerencias() {
   document.getElementById('listaSugerenciasDirector').innerHTML = '';

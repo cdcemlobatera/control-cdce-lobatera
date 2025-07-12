@@ -188,3 +188,24 @@ tbody tr:hover {
   color: #1F618D;
   text-decoration: none;
 }
+
+.lista-sugerencias {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  list-style: none;
+}
+
+.lista-sugerencias li {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.lista-sugerencias li:hover {
+  background-color: #f0f0f0;
+}

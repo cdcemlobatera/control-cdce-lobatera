@@ -193,22 +193,17 @@ max-height: 90vh; overflow-y: auto;">
 
       <!-- Lote 3 -->
 
-
+      <!-- 🔍 Buscador independiente de director -->
       <fieldset style="margin-top:1rem;">
-        <legend><i class="fa fa-search" aria-hidden="true"></i> Buscar director por nombre o cédula</legend>
+        <legend><i class="fa fa-search" aria-hidden="true"></i> Buscar director por nombre o cédula parcial</legend>
 
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <input type="text" id="busquedaDirector" placeholder="Ingrese texto o V123.." autocomplete="off"
-            oninput="buscarDirectoresSugeridos(this.value)" style="flex: 1;">
-          <button type="button" onclick="document.getElementById('busquedaDirector').value=''; limpiarSugerencias()">
-            ❌ Limpiar
-          </button>
-        </div>
+        <input type="text" id="busquedaDirector" placeholder="Ej. Oxiel, V81..." autocomplete="off"
+          oninput="window.buscarDirectoresSugeridos(this.value)" />
 
-        <ul id="listaSugerenciasDirector" style="margin-top: 0.5rem; padding-left: 1rem;"></ul>
+        <ul id="listaSugerenciasDirector" class="lista-sugerencias"></ul>
       </fieldset>
 
-
+      <!-- 🧾 Campo directo para ingresar cédula -->
       <fieldset>
         <legend>Datos del Director</legend>
 
@@ -220,6 +215,7 @@ max-height: 90vh; overflow-y: auto;">
         <span id="mensajeDirector" class="mensaje-validacion"></span>
       </fieldset>
 
+      <!-- 📋 Datos auto-rellenables -->
       <fieldset disabled class="fieldset-lectura">
         <legend>
           <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
