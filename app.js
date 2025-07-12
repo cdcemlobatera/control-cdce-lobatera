@@ -327,22 +327,22 @@ app.get('/circuitos/listar', async (req, res) => {
 
 // 🔎 Buscar director por cédula (V12642865, sin importar mayúsculas)
 app.get('/directores/cedula/:cedula', async (req, res) => {
-  const cedula = req.params.cedula;
+  const cedula = req.params.cedula?.trim(); // ← limpieza de espacios ocultos
 
   const { data, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-    .ilike('cedula', cedula)
+    .eq('cedula', cedula) // ← búsqueda exacta, no flexible
     .eq('rol', 'director')
-    .limit(1); // ← reemplaza .single()
+    .single(); // ← ya que esperamos un único resultado literal
 
-  if (error || !data || data.length === 0) {
+  if (error || !data) {
     console.warn(`❌ No se encontró director con la cédula: ${cedula}`);
     return res.status(404).json({ error: 'Director no encontrado' });
   }
 
-  console.log('✅ Director encontrado:', data[0]);
-  res.json(data[0]); // ← devuelve el primer resultado
+  console.log('✅ Director encontrado:', data);
+  res.json(data);
 });
 
 // 🧠 Sugerencia por nombre o cédula parcial (sin alias)
