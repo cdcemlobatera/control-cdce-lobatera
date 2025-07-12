@@ -367,12 +367,16 @@ app.get('/directores/buscar', async (req, res) => {
   }
 });
 
+if (!PORT) {
+  console.warn('⚠️ La variable de entorno PORT no está definida. Usando 10000 por defecto.');
+}
+
 // 🌐 Redirección al login desde raíz
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
 // 🛫 Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Servidor escuchando en http://0.0.0.0:${PORT}`);
 });
