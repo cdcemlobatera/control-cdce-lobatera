@@ -1,4 +1,5 @@
 // Instituciones.js
+// Lote 1
 // 🔹 IMPORTACIONES
 import { validarCampos } from './utils/validacion.js';
 import { crearTablaConFiltros } from './tablasCDCE.js';
@@ -42,46 +43,83 @@ function mostrarDetalleSupervisor() {
   }
 }
 
-function abrirFormulario(institucion = null) {
-  const form = document.getElementById('formInstitucion');
-  if (!form) return;
+async function cargarResumen() {
+  const refs = {
+    instituciones: document.getElementById('totalInstituciones'),
+    dependencias: document.getElementById('totalDependencias'),
+    niveles: document.getElementById('totalNiveles'),
+    directores: document.getElementById('totalDirectores')
+  };
 
-  form.querySelectorAll('.mensaje-validacion').forEach(span => span.textContent = '');
-  form.querySelectorAll('.resaltado-error').forEach(el => el.classList.remove('resaltado-error'));
-  form.reset();
+  for (const el of Object.values(refs)) el.textContent = '⌛';
 
-  const modo = institucion ? 'editar' : 'crear';
+  try {
+    const res = await fetch('/instituciones/resumen');
+    const data = await res.json();
 
-  document.getElementById('modoFormulario').value = modo;
-  document.getElementById('idInstitucionEditar').value = institucion?.codigodea || '';
-  document.getElementById('mensajeDEA').textContent = '';
-  const titulo = document.getElementById('tituloFormulario');
-  if (titulo) titulo.textContent = modo === 'editar' ? '✏️ Editar Institución' : '🏫 Nueva Institución';
-  document.getElementById('codigodea').readOnly = (modo === 'editar');
+    const animar = (el, final) => {
+      let valor = parseInt(el.textContent) || 0;
+      const paso = (final - valor) / 20;
+      let contador = 0;
 
-  cargarCircuitos().then(() => {
-    const selCircuito = document.getElementById('codcircuitoedu');
-    selCircuito?.addEventListener('change', mostrarDetalleSupervisor);
+      const intervalo = setInterval(() => {
+        contador++;
+        el.textContent = Math.round(valor + paso * contador);
+        if (contador >= 20) {
+          el.textContent = final;
+          el.classList.add('pop');
+          clearInterval(intervalo);
+          setTimeout(() => el.classList.remove('pop'), 400);
+        }
+      }, 20);
+    };
 
-    if (institucion) {
-      for (const [clave, valor] of Object.entries(institucion)) {
-        if (form[clave]) form[clave].value = valor || '';
-      }
+    animar(refs.instituciones, data.totalInstituciones ?? 0);
+    animar(refs.dependencias, data.totalDependencias ?? 0);
+    animar(refs.niveles, data.totalNiveles ?? 0);
+    animar(refs.directores, data.totalDirectores ?? 0);
+  } catch (err) {
+    console.error('❌ Resumen no disponible:', err);
+    for (const el of Object.values(refs)) el.textContent = '—';
+  }
+}
 
-      if (selCircuito) {
-        selCircuito.value = institucion.codcircuitoedu;
-        selCircuito.dispatchEvent(new Event('change'));
-      }
-    } else {
-      const detalle = document.getElementById('detalleCircuito');
-      if (detalle) detalle.textContent = 'ℹ️ Seleccione un circuito para ver su zona';
+async function cargarCircuitos() {
+  try {
+    const res = await fetch('/circuitos/listar');
+    if (!res.ok) throw new Error(await res.text());
+
+    const datos = await res.json();
+    const select = document.getElementById('codcircuitoedu');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Seleccione un circuito</option>';
+
+    datos.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.codcircuitoedu;
+      option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
+      option.dataset.zona = c.zona || '';
+      option.dataset.supervisor = JSON.stringify(c.supervisor || {});
+      select.appendChild(option);
+    });
+
+    if (!select.dataset.listenerAsignado) {
+      select.dataset.listenerAsignado = 'true';
+      select.addEventListener('change', () => {
+        const opcion = select.options[select.selectedIndex];
+        const zona = opcion?.dataset?.zona || '';
+        const dZona = document.getElementById('detalleCircuito');
+        if (dZona) dZona.textContent = zona ? `🗺️ Zona: ${zona}` : '';
+
+        mostrarDetalleSupervisor();
+      });
     }
-
-    document.getElementById('modalRegistro').style.display = 'block';
-    document.getElementById('codigodea').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    actualizarVisibilidadBotonEliminar();
-    asignarListenerEliminarSiHaceFalta();
-  });
+  } catch (err) {
+    console.error('❌ Error al cargar circuitos:', err);
+    const select = document.getElementById('codcircuitoedu');
+    if (select) select.innerHTML = '<option value="">Error al cargar</option>';
+  }
 }
 
 // Lote 2
@@ -155,7 +193,30 @@ async function sugerirDirector() {
   }
 }
 
-// Lote 3
+//Lote 3
+async function cargarCircuitosFiltro() {
+  const filtro = document.getElementById('filtroCircuito');
+  if (!filtro) return;
+
+  const { data: circuitos, error } = await supabase
+    .from('circuitoseducativos')
+    .select('codcircuitoedu, nombrecircuito')
+    .order('nombrecircuito', { ascending: true });
+
+  if (error) {
+    console.error('❌ Error al cargar circuitos para filtro:', error.message);
+    return;
+  }
+
+  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
+
+  for (const circuito of circuitos) {
+    const opt = document.createElement('option');
+    opt.value = circuito.codcircuitoedu;
+    opt.textContent = circuito.nombrecircuito;
+    filtro.appendChild(opt);
+  }
+}
 
 document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -299,6 +360,8 @@ window.sugerirDirector = sugerirDirector;
 window.cerrarFormulario = cerrarFormulario;
 window.editar = editar;
 window.cargarCircuitos = cargarCircuitos;
+window.cargarResumen = cargarResumen;
+window.mostrarDetalleSupervisor = mostrarDetalleSupervisor;
 window.cargarCircuitosFiltro = cargarCircuitosFiltro;
 
 // 🔹 FUNCIÓN GLOBAL PARA ELIMINAR INSTITUCIÓN
