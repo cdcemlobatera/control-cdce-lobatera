@@ -1,12 +1,8 @@
-// Instituciones.js
-// Lote 1
-// 🔹 IMPORTACIONES
+//instituciones.js Lote 1
 import { validarCampos } from './utils/validacion.js';
 import { crearTablaConFiltros } from './tablasCDCE.js';
 
 const supabase = window.supabase;
-
-// 🔹 UTILIDADES DE FORMULARIO
 
 function cerrarFormulario() {
   document.getElementById('modalRegistro').style.display = 'none';
@@ -15,6 +11,57 @@ function cerrarFormulario() {
 function editar(codigodea) {
   const inst = window.instituciones?.find(i => i.codigodea === codigodea);
   if (inst) abrirFormulario(inst);
+}
+
+function abrirFormulario(institucion = null) {
+  const form = document.getElementById('formInstitucion');
+  if (!form) return;
+
+  form.querySelectorAll('.mensaje-validacion').forEach(span => span.textContent = '');
+  form.querySelectorAll('.resaltado-error').forEach(el => el.classList.remove('resaltado-error'));
+  form.reset();
+
+  const modo = institucion ? 'editar' : 'crear';
+
+  document.getElementById('modoFormulario').value = modo;
+  document.getElementById('idInstitucionEditar').value = institucion?.codigodea || '';
+  document.getElementById('mensajeDEA').textContent = '';
+  const titulo = document.getElementById('tituloFormulario');
+  if (titulo) titulo.textContent = modo === 'editar' ? '✏️ Editar Institución' : '🏫 Nueva Institución';
+  document.getElementById('codigodea').readOnly = (modo === 'editar');
+
+  cargarCircuitos().then(() => {
+    const selCircuito = document.getElementById('codcircuitoedu');
+    if (selCircuito && !selCircuito.dataset.listenerAsignado) {
+      selCircuito.addEventListener('change', mostrarDetalleSupervisor);
+      selCircuito.dataset.listenerAsignado = 'true';
+    }
+
+    if (institucion) {
+      for (const [clave, valor] of Object.entries(institucion)) {
+        if (form[clave]) form[clave].value = valor || '';
+      }
+
+      if (selCircuito) {
+        selCircuito.value = institucion.codcircuitoedu;
+        selCircuito.dispatchEvent(new Event('change'));
+      }
+
+      mostrarDatosDirector({
+        nombresapellidosrep: institucion.nombredirector || '',
+        telefono: institucion.telefonodirector || '',
+        correo: institucion.correodirector || ''
+      });
+    } else {
+      const detalle = document.getElementById('detalleCircuito');
+      if (detalle) detalle.textContent = 'ℹ️ Seleccione un circuito para ver su zona';
+    }
+
+    document.getElementById('modalRegistro').style.display = 'block';
+    document.getElementById('codigodea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    actualizarVisibilidadBotonEliminar();
+    asignarListenerEliminarSiHaceFalta();
+  });
 }
 
 function actualizarVisibilidadBotonEliminar() {
@@ -122,7 +169,7 @@ async function cargarCircuitos() {
   }
 }
 
-// Lote 2
+//Lote 2
 
 function asignarListenerEliminarSiHaceFalta() {
   const btnEliminar = document.getElementById('btnEliminarInstitucion');
@@ -152,6 +199,14 @@ function validarDEA() {
     });
 }
 
+// 🔹 Función reutilizable para mostrar campos del director
+
+function mostrarDatosDirector(director) {
+  document.getElementById('nombredirector').value = director?.nombresapellidosrep || '';
+  document.getElementById('telefonodirector').value = director?.telefono || '';
+  document.getElementById('correodirector').value = director?.correo || '';
+}
+
 // 🔹 DIRECTOR: Buscar y sugerir
 
 async function buscarDirector() {
@@ -161,13 +216,9 @@ async function buscarDirector() {
   try {
     const res = await fetch(`/directores/cedula/${cedula}`);
     const data = await res.json();
-    document.getElementById('nombredirector').value = data?.nombresapellidosrep || '';
-    document.getElementById('telefonodirector').value = data?.telefono || '';
-    document.getElementById('correodirector').value = data?.correo || '';
+    mostrarDatosDirector(data);
   } catch {
-    document.getElementById('nombredirector').value = '';
-    document.getElementById('telefonodirector').value = '';
-    document.getElementById('correodirector').value = '';
+    mostrarDatosDirector({});
   }
 }
 
@@ -193,30 +244,7 @@ async function sugerirDirector() {
   }
 }
 
-//Lote 3
-async function cargarCircuitosFiltro() {
-  const filtro = document.getElementById('filtroCircuito');
-  if (!filtro) return;
-
-  const { data: circuitos, error } = await supabase
-    .from('circuitoseducativos')
-    .select('codcircuitoedu, nombrecircuito')
-    .order('nombrecircuito', { ascending: true });
-
-  if (error) {
-    console.error('❌ Error al cargar circuitos para filtro:', error.message);
-    return;
-  }
-
-  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
-
-  for (const circuito of circuitos) {
-    const opt = document.createElement('option');
-    opt.value = circuito.codcircuitoedu;
-    opt.textContent = circuito.nombrecircuito;
-    filtro.appendChild(opt);
-  }
-}
+// Lote 3
 
 document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -282,7 +310,33 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
     alert(`🚨 Error inesperado: ${err.message}`);
     console.error(err);
   }
-});
+}
+
+);
+
+async function cargarCircuitosFiltro() {
+  const filtro = document.getElementById('filtroCircuito');
+  if (!filtro) return;
+
+  const { data: circuitos, error } = await supabase
+    .from('circuitoseducativos')
+    .select('codcircuitoedu, nombrecircuito')
+    .order('nombrecircuito', { ascending: true });
+
+  if (error) {
+    console.error('❌ Error al cargar circuitos para filtro:', error.message);
+    return;
+  }
+
+  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
+
+  for (const circuito of circuitos) {
+    const opt = document.createElement('option');
+    opt.value = circuito.codcircuitoedu;
+    opt.textContent = circuito.nombrecircuito;
+    filtro.appendChild(opt);
+  }
+}
 
 // Lote 4
 
@@ -304,12 +358,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   for (const inst of instituciones) {
     const { data: director } = await supabase
       .from('raclobatera')
-      .select('nombresapellidosrep, telefono')
+      .select('nombresapellidosrep, telefono, correo')
       .eq('cedula', inst.ceduladirector)
       .single();
 
     inst.nombredirector = director?.nombresapellidosrep || '—';
     inst.telefonodirector = director?.telefono || '—';
+    inst.correodirector = director?.correo || '';
   }
 
   crearTablaConFiltros({
@@ -357,6 +412,7 @@ window.abrirFormulario = abrirFormulario;
 window.validarDEA = validarDEA;
 window.buscarDirector = buscarDirector;
 window.sugerirDirector = sugerirDirector;
+window.mostrarDatosDirector = mostrarDatosDirector;
 window.cerrarFormulario = cerrarFormulario;
 window.editar = editar;
 window.cargarCircuitos = cargarCircuitos;
@@ -390,6 +446,7 @@ window.eliminarInstitucion = async function (codigodea) {
     document.getElementById('codigodea').readOnly = false;
     document.getElementById('mensajeDEA').textContent = '';
     document.getElementById('detalleSupervisor').textContent = '';
+    mostrarDatosDirector({});
     await cargarResumen?.();
     location.reload();
   } catch (err) {
