@@ -334,13 +334,15 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
     .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
     .ilike('cedula', cedula)
     .eq('rol', 'director')
-    .single();
+    .limit(1); // ← reemplaza .single()
 
-  if (error || !data) {
+  if (error || !data || data.length === 0) {
+    console.warn(`❌ No se encontró director con la cédula: ${cedula}`);
     return res.status(404).json({ error: 'Director no encontrado' });
   }
 
-  res.json(data);
+  console.log('✅ Director encontrado:', data[0]);
+  res.json(data[0]); // ← devuelve el primer resultado
 });
 
 // 🧠 Sugerencia por nombre o cédula parcial (sin alias)
