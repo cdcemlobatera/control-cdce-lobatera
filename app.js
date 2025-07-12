@@ -332,18 +332,18 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
   const { data, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-    .or(`ilike(cedula, ${cedula}),eq(cedula, ${cedula})`)
+    .ilike('cedula', cedula)
     .eq('rol', 'director')
     .single();
 
-  if (error || !director) {
+  if (error || !data) {
     return res.status(404).json({ error: 'Director no encontrado' });
   }
 
-  res.json(director);
+  res.json(data);
 });
 
-// 🧠 Sugerencia por nombre o cédula parcial
+// 🧠 Sugerencia por nombre o cédula parcial (sin alias)
 app.get('/directores/buscar', async (req, res) => {
   const query = req.query.q?.trim();
   if (!query || query.length < 3) return res.json([]);
@@ -351,7 +351,7 @@ app.get('/directores/buscar', async (req, res) => {
   try {
     const { data: posibles, error } = await supabase
       .from('personal')
-      .select('cedula, nombresapellidos AS nombresapellidosrep')
+      .select('cedula, nombresapellidos')
       .eq('rol', 'director')
       .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
 
@@ -365,27 +365,6 @@ app.get('/directores/buscar', async (req, res) => {
     console.error('❌ Excepción en /directores/buscar:', e);
     res.status(500).json([]);
   }
-});
-
-// 🧠 Sugerencia de director por nombre o cédula parcial
-app.get('/directores/buscar', async (req, res) => {
-  const query = req.query.q?.trim();
-  if (!query || query.length < 3) {
-    return res.json([]); // Se ignoran textos muy cortos
-  }
-
-  const { data: posibles, error } = await supabase
-    .from('personal')
-    .select('cedula, nombresapellidos AS nombresapellidosrep')
-    .eq('rol', 'director')
-    .or(`ilike(nombresapellidos, %${query}%),ilike(cedula, %${query}%)`);
-
-  if (error || !Array.isArray(posibles)) {
-    console.error('❌ Error al buscar director:', error);
-    return res.status(500).json({ error: 'Error al buscar director' });
-  }
-
-  res.json(posibles);
 });
 
 // 🌐 Redirección al login desde raíz
