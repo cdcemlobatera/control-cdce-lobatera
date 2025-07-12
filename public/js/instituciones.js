@@ -207,8 +207,8 @@ function mostrarDatosDirector(director) {
   document.getElementById('correodirector').value = director?.correo || '';
 }
 
-// 🔹 DIRECTOR: Buscar y sugerir
-
+// 🔹 DIRECTOR: 🔍 Sugerencia de directores mientras se escribe
+// 🔍 Sugerencia de directores mientras se escribe en campo de cédula
 async function sugerirDirector() {
   const texto = document.getElementById('ceduladirector').value.trim();
   const datalist = document.getElementById('listaDirectores');
@@ -217,25 +217,30 @@ async function sugerirDirector() {
     const res = await fetch(`/directores/buscar?q=${texto}`);
     const data = await res.json();
 
-    // 👇 Protección contra errores de formato
     if (!Array.isArray(data)) {
       datalist.innerHTML = '';
       return;
     }
 
+    const yaVistos = new Set();
     datalist.innerHTML = '';
+
     data.forEach(director => {
+      if (yaVistos.has(director.cedula)) return;
+      yaVistos.add(director.cedula);
+
       const option = document.createElement('option');
       option.value = director.cedula;
-      option.label = director.nombresapellidosrep;
+      option.label = director.nombresapellidos;
       datalist.appendChild(option);
     });
   } catch (e) {
-    console.error('Error en sugerencia de directores:', e);
+    console.error('❌ Error en sugerencia de directores:', e);
     datalist.innerHTML = '';
   }
 }
 
+// 🧠 Búsqueda directa por cédula para autocompletar datos
 async function buscarDirector() {
   const cedula = document.getElementById('ceduladirector').value.trim();
   if (!cedula) return;
@@ -243,12 +248,22 @@ async function buscarDirector() {
   try {
     const res = await fetch(`/directores/cedula/${cedula}`);
     const data = await res.json();
-    mostrarDatosDirector(data);
-  } catch {
+
+    if (data?.cedula && data?.nombresapellidosrep) {
+      mostrarDatosDirector(data);
+      document.getElementById('mensajeDirector').textContent = '✔ Director validado exitosamente.';
+    } else {
+      mostrarDatosDirector({});
+      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
+    }
+  } catch (e) {
+    console.error('❌ Error al buscar director por cédula:', e);
     mostrarDatosDirector({});
+    document.getElementById('mensajeDirector').textContent = '❌ Error al validar director.';
   }
 }
 
+// 🔎 Búsqueda independiente desde campo auxiliar (nombre o cédula parcial)
 async function buscarDirectoresSugeridos(texto) {
   const lista = document.getElementById('listaSugerenciasDirector');
   lista.innerHTML = '';
@@ -274,10 +289,7 @@ async function buscarDirectoresSugeridos(texto) {
       item.onclick = () => {
         const campoCedula = document.getElementById('ceduladirector');
         campoCedula.value = director.cedula;
-
-        // 🧠 Forzar blur para activar autocompletado
-        campoCedula.dispatchEvent(new Event('blur'));
-
+        campoCedula.dispatchEvent(new Event('blur')); // activa búsqueda completa
         lista.innerHTML = '';
       };
 
@@ -292,13 +304,6 @@ async function buscarDirectoresSugeridos(texto) {
   } catch (e) {
     console.error('❌ Error en buscarDirectoresSugeridos:', e);
   }
-}
-
-// 🪄 Exponer funciones al HTML si usas type="module"
-window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
-
-function limpiarSugerencias() {
-  document.getElementById('listaSugerenciasDirector').innerHTML = '';
 }
 
 // Lote 3
@@ -467,8 +472,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 window.abrirFormulario = abrirFormulario;
 window.validarDEA = validarDEA;
-window.buscarDirector = buscarDirector;
-window.sugerirDirector = sugerirDirector;
 window.mostrarDatosDirector = mostrarDatosDirector;
 window.cerrarFormulario = cerrarFormulario;
 window.editar = editar;
@@ -476,6 +479,11 @@ window.cargarCircuitos = cargarCircuitos;
 window.cargarResumen = cargarResumen;
 window.mostrarDetalleSupervisor = mostrarDetalleSupervisor;
 window.cargarCircuitosFiltro = cargarCircuitosFiltro;
+// 🔗 Exposición global (si usas script con type="module")
+window.sugerirDirector = sugerirDirector;
+window.buscarDirector = buscarDirector;
+window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
+
 
 // 🔹 FUNCIÓN GLOBAL PARA ELIMINAR INSTITUCIÓN
 
