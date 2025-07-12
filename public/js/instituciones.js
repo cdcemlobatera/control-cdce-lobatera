@@ -209,6 +209,7 @@ function mostrarDatosDirector(director) {
 
 // 🔹 DIRECTOR: 🔍 Sugerencia de directores mientras se escribe
 // 🔍 Sugerencia de directores mientras se escribe en campo de cédula
+// 🔍 Sugerencia de directores mientras se escribe en campo de cédula
 async function sugerirDirector() {
   const texto = document.getElementById('ceduladirector').value.trim();
   const datalist = document.getElementById('listaDirectores');
