@@ -209,19 +209,6 @@ function mostrarDatosDirector(director) {
 
 // 🔹 DIRECTOR: Buscar y sugerir
 
-async function buscarDirector() {
-  const cedula = document.getElementById('ceduladirector').value.trim();
-  if (!cedula) return;
-
-  try {
-    const res = await fetch(`/directores/cedula/${cedula}`);
-    const data = await res.json();
-    mostrarDatosDirector(data);
-  } catch {
-    mostrarDatosDirector({});
-  }
-}
-
 async function sugerirDirector() {
   const texto = document.getElementById('ceduladirector').value.trim();
   const datalist = document.getElementById('listaDirectores');
@@ -247,6 +234,59 @@ async function sugerirDirector() {
     console.error('Error en sugerencia de directores:', e);
     datalist.innerHTML = '';
   }
+}
+
+async function buscarDirector() {
+  const cedula = document.getElementById('ceduladirector').value.trim();
+  if (!cedula) return;
+
+  try {
+    const res = await fetch(`/directores/cedula/${cedula}`);
+    const data = await res.json();
+    mostrarDatosDirector(data);
+  } catch {
+    mostrarDatosDirector({});
+  }
+}
+
+async function buscarDirectoresSugeridos(texto) {
+  const lista = document.getElementById('listaSugerenciasDirector');
+  lista.innerHTML = '';
+
+  if (!texto || texto.trim().length < 3) return;
+
+  try {
+    const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data)) return;
+
+    data.forEach(director => {
+      const item = document.createElement('li');
+      item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+      item.style.cursor = 'pointer';
+
+      item.onclick = () => {
+        document.getElementById('ceduladirector').value = director.cedula;
+        buscarDirector(); // ← rellena nombre, teléfono y correo
+        lista.innerHTML = '';
+      };
+
+      lista.appendChild(item);
+    });
+
+    if (data.length === 0) {
+      const noResults = document.createElement('li');
+      noResults.textContent = 'No se encontraron coincidencias';
+      lista.appendChild(noResults);
+    }
+  } catch (e) {
+    console.error('❌ Error en buscarDirectoresSugeridos:', e);
+  }
+}
+
+function limpiarSugerencias() {
+  document.getElementById('listaSugerenciasDirector').innerHTML = '';
 }
 
 // Lote 3
