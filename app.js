@@ -335,8 +335,9 @@ async function buscarDirectoresSugeridos(texto) {
 
   try {
     const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
-    const data = await res.json();
+    if (!res.ok) throw new Error(`Respuesta no válida: ${res.status}`);
 
+    const data = await res.json();
     if (!Array.isArray(data)) return;
 
     const yaVistos = new Set();
@@ -346,21 +347,17 @@ async function buscarDirectoresSugeridos(texto) {
       yaVistos.add(director.cedula);
 
       const item = document.createElement('li');
-      item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+      item.textContent = `${director.nombresapellidosrep || director.nombresapellidos} (${director.cedula})`;
       item.style.cursor = 'pointer';
 
       item.onclick = () => {
-        const campoCedula = document.getElementById('ceduladirector');
-        campoCedula.value = director.cedula;
+        // ← Rellenar todos los campos directamente
+        document.getElementById('ceduladirector').value = director.cedula;
+        document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
+        document.getElementById('telefonodirector').value = director.telefono || '';
+        document.getElementById('correodirector').value = director.correo || '';
 
-        const modo = document.getElementById('modoFormulario')?.value || 'crear';
-        if (modo === 'crear') {
-          mostrarDatosDirector(director);
-          document.getElementById('mensajeDirector').textContent = '✔ Director precargado desde búsqueda visual.';
-        } else {
-          campoCedula.dispatchEvent(new Event('blur')); // activa backend en edición
-        }
-
+        document.getElementById('mensajeDirector').textContent = '✔ Director seleccionado correctamente.';
         lista.innerHTML = '';
       };
 
@@ -373,7 +370,10 @@ async function buscarDirectoresSugeridos(texto) {
       lista.appendChild(noResults);
     }
   } catch (e) {
-    console.error('❌ Error en buscarDirectoresSugeridos:', e);
+    console.error('❌ Error en buscarDirectoresSugeridos:', e.message);
+    const errorItem = document.createElement('li');
+    errorItem.textContent = '⚠️ Error al conectar con el servidor';
+    lista.appendChild(errorItem);
   }
 }
 
