@@ -25,7 +25,6 @@ app.use(session({
 }));
 
 // ─── 🔐 AUTENTICACIÓN Y SESIÓN ────────────────────────────────
-
 app.post('/login', async (req, res) => {
   const { cedula, clave } = req.body;
 
@@ -118,11 +117,118 @@ app.post('/registro-usuario', async (req, res) => {
   res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
-//Lote 2
+// ─── 📡 DIRECTORES: BÚSQUEDA INTEGRADA ─────────────────────────
 
-// ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
+app.get('/directores/buscar', async (req, res) => {
+  const query = req.query.q?.trim();
+  if (!query || query.length < 3) return res.json([]);
 
-// Crear nueva institución
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('rol', 'director')
+      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
+
+    if (error) {
+      console.error('❌ Supabase error en /directores/buscar:', error.message);
+      return res.status(500).json([]);
+    }
+
+    res.json(data || []);
+  } catch (e) {
+    console.error('❌ Excepción en /directores/buscar:', e);
+    res.status(500).json([]);
+  }
+});
+
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula?.trim();
+  if (!cedula) return res.status(400).json({});
+
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('cedula', cedula)
+      .eq('rol', 'director')
+      .single();
+
+    if (error || !data) {
+      console.warn(`❌ No se encontró director con cédula: ${cedula}`);
+      return res.status(404).json({});
+    }
+
+    res.json(data);
+  } catch (e) {
+    console.error('❌ Error en /directores/cedula:', e);
+    res.status(500).json({});
+  }
+});
+
+// 🟢 INICIO DEL SERVIDOR
+app.listen(PORT, () => {
+  console.log(`✅ Control-CDCE-Lobatera activo en puerto ${PORT}`);
+});
+
+// Lote 2
+
+// ─── 📡 DIRECTORES: BÚSQUEDA INTEGRADA ─────────────────────────
+
+// 🔎 Buscar directores por nombre o cédula parcial (sugerencias visuales)
+app.get('/directores/buscar', async (req, res) => {
+  const query = req.query.q?.trim();
+  if (!query || query.length < 3) return res.json([]);
+
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('rol', 'director')
+      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
+
+    if (error) {
+      console.error('❌ Supabase error en /directores/buscar:', error.message);
+      return res.status(500).json([]);
+    }
+
+    res.json(data || []);
+  } catch (e) {
+    console.error('❌ Excepción en /directores/buscar:', e);
+    res.status(500).json([]);
+  }
+});
+
+// 🔍 Buscar director por cédula exacta (modo edición)
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula?.trim();
+  if (!cedula) return res.status(400).json({});
+
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('cedula', cedula)
+      .eq('rol', 'director')
+      .single();
+
+    if (error || !data) {
+      console.warn(`❌ No se encontró director con cédula: ${cedula}`);
+      return res.status(404).json({});
+    }
+
+    res.json(data);
+  } catch (e) {
+    console.error('❌ Error en /directores/cedula:', e);
+    res.status(500).json({});
+  }
+});
+
+// Lote 3
+
+// 🏫 INSTITUCIONES: CREACIÓN, EDICIÓN Y CONSULTAS
+
+// 🔹 Crear nueva institución
 app.post('/instituciones/nueva', async (req, res) => {
   try {
     const datos = req.body;
@@ -143,7 +249,7 @@ app.post('/instituciones/nueva', async (req, res) => {
   }
 });
 
-// Editar institución existente
+// ✏️ Editar institución existente
 app.patch('/instituciones/:codigodea', async (req, res) => {
   const { codigodea } = req.params;
   const datos = req.body;
@@ -161,7 +267,7 @@ app.patch('/instituciones/:codigodea', async (req, res) => {
   res.status(200).json({ mensaje: 'Institución actualizada exitosamente' });
 });
 
-// Listar instituciones para validación y tabla dinámica
+// 📋 Listar instituciones para tabla dinámica o validación
 app.get('/instituciones/listar', async (req, res) => {
   const { data: instituciones, error: errorInstituciones } = await supabase
     .from('instituciones')
@@ -195,7 +301,7 @@ app.get('/instituciones/listar', async (req, res) => {
   res.json(resultados);
 });
 
-// 🔢 Resumen estadístico para tarjetas animadas
+// 📈 Resumen estadístico para tarjetas o panel
 app.get('/instituciones/resumen', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -224,9 +330,9 @@ app.get('/instituciones/resumen', async (req, res) => {
   }
 });
 
-//Lote A3
+// Lote 4
 
-// 🔍 Detalle de institución individual con datos del director
+// 🔍 Detalle individual de institución con datos del director
 app.get('/instituciones/:id', async (req, res) => {
   const { data: institucion, error } = await supabase
     .from('instituciones')
@@ -267,7 +373,7 @@ app.delete('/instituciones/:codigodea', async (req, res) => {
     return res.status(500).json({ error: 'No se pudo eliminar la institución' });
   }
 
-  res.status(204).send();
+  res.status(204).send(); // Sin contenido
 });
 
 // 🔐 Ruta protegida para acceder al panel principal
@@ -323,69 +429,14 @@ app.get('/circuitos/listar', async (req, res) => {
   res.json(resultados);
 });
 
-// Lote 4
-
-// 🔎 Buscar director por cédula (V12642865, sin importar mayúsculas)
-// 🔍 Función sugerida para búsqueda parcial y selección de directores
-// 🔎 Buscar directores por nombre o cédula parcial
-app.get('/directores/buscar', async (req, res) => {
-  const query = req.query.q?.trim();
-  if (!query || query.length < 3) return res.json([]);
-
-  try {
-    const { data, error } = await supabase
-      .from('personal')
-      .select('cedula, nombresapellidos, nombresapellidos AS nombresapellidosrep, telefono, correo')
-      .eq('rol', 'director')
-      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
-
-    if (error) {
-      console.error('❌ Supabase error en búsqueda parcial:', error.message);
-      return res.status(500).json([]);
-    }
-
-    res.json(data || []);
-  } catch (e) {
-    console.error('❌ Excepción en /directores/buscar:', e);
-    res.status(500).json([]);
-  }
-});
-
-// 🔍 Buscar director por cédula exacta (modo edición)
-app.get('/directores/cedula/:cedula', async (req, res) => {
-  const cedula = req.params.cedula?.trim();
-  if (!cedula) return res.status(400).json({});
-
-  try {
-    const { data, error } = await supabase
-      .from('personal')
-      .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
-      .eq('cedula', cedula)
-      .eq('rol', 'director')
-      .single();
-
-    if (error || !data) {
-      console.warn(`❌ No se encontró director con cédula: ${cedula}`);
-      return res.status(404).json({});
-    }
-
-    res.json(data);
-  } catch (e) {
-    console.error('❌ Error en /directores/cedula:', e);
-    res.status(500).json({});
-  }
-});
-
 if (!PORT) {
   console.warn('⚠️ La variable de entorno PORT no está definida. Usando 10000 por defecto.');
 }
 
-// 🌐 Redirección al login desde raíz
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
-// 🛫 Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor escuchando en http://0.0.0.0:${PORT}`);
 });

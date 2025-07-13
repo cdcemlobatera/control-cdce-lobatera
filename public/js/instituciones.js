@@ -90,86 +90,7 @@ function mostrarDetalleSupervisor() {
   }
 }
 
-async function cargarResumen() {
-  const refs = {
-    instituciones: document.getElementById('totalInstituciones'),
-    dependencias: document.getElementById('totalDependencias'),
-    niveles: document.getElementById('totalNiveles'),
-    directores: document.getElementById('totalDirectores')
-  };
-
-  for (const el of Object.values(refs)) el.textContent = '⌛';
-
-  try {
-    const res = await fetch('/instituciones/resumen');
-    const data = await res.json();
-
-    const animar = (el, final) => {
-      let valor = parseInt(el.textContent) || 0;
-      const paso = (final - valor) / 20;
-      let contador = 0;
-
-      const intervalo = setInterval(() => {
-        contador++;
-        el.textContent = Math.round(valor + paso * contador);
-        if (contador >= 20) {
-          el.textContent = final;
-          el.classList.add('pop');
-          clearInterval(intervalo);
-          setTimeout(() => el.classList.remove('pop'), 400);
-        }
-      }, 20);
-    };
-
-    animar(refs.instituciones, data.totalInstituciones ?? 0);
-    animar(refs.dependencias, data.totalDependencias ?? 0);
-    animar(refs.niveles, data.totalNiveles ?? 0);
-    animar(refs.directores, data.totalDirectores ?? 0);
-  } catch (err) {
-    console.error('❌ Resumen no disponible:', err);
-    for (const el of Object.values(refs)) el.textContent = '—';
-  }
-}
-
-async function cargarCircuitos() {
-  try {
-    const res = await fetch('/circuitos/listar');
-    if (!res.ok) throw new Error(await res.text());
-
-    const datos = await res.json();
-    const select = document.getElementById('codcircuitoedu');
-    if (!select) return;
-
-    select.innerHTML = '<option value="">Seleccione un circuito</option>';
-
-    datos.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.codcircuitoedu;
-      option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
-      option.dataset.zona = c.zona || '';
-      option.dataset.supervisor = JSON.stringify(c.supervisor || {});
-      select.appendChild(option);
-    });
-
-    if (!select.dataset.listenerAsignado) {
-      select.dataset.listenerAsignado = 'true';
-      select.addEventListener('change', () => {
-        const opcion = select.options[select.selectedIndex];
-        const zona = opcion?.dataset?.zona || '';
-        const dZona = document.getElementById('detalleCircuito');
-        if (dZona) dZona.textContent = zona ? `🗺️ Zona: ${zona}` : '';
-
-        mostrarDetalleSupervisor();
-      });
-    }
-  } catch (err) {
-    console.error('❌ Error al cargar circuitos:', err);
-    const select = document.getElementById('codcircuitoedu');
-    if (select) select.innerHTML = '<option value="">Error al cargar</option>';
-  }
-}
-
-//Lote 2
+// Lote 2
 
 function asignarListenerEliminarSiHaceFalta() {
   const btnEliminar = document.getElementById('btnEliminarInstitucion');
@@ -199,52 +120,17 @@ function validarDEA() {
     });
 }
 
-// 🔹 Función reutilizable para mostrar campos del director
-
-function mostrarDatosDirector(director) {
-  document.getElementById('nombredirector').value = director?.nombresapellidosrep || '';
-  document.getElementById('telefonodirector').value = director?.telefono || '';
-  document.getElementById('correodirector').value = director?.correo || '';
+// 🔹 Mostrar campos del director en el formulario
+function mostrarDatosDirector(director = {}) {
+  document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
+  document.getElementById('telefonodirector').value = director.telefono || '';
+  document.getElementById('correodirector').value = director.correo || '';
 }
-
-// 🔹 DIRECTOR: 🔍 Sugerencia de directores mientras se escribe
-// 🔍 Sugerencia de directores mientras se escribe en campo de cédula
-//async function sugerirDirector() {
-//  const texto = document.getElementById('ceduladirector').value.trim();
-//  const datalist = document.getElementById('listaDirectores');
-//
-//  try {
-//    const res = await fetch(`/directores/buscar?q=${texto}`);
-//    const data = await res.json();
-
-//    if (!Array.isArray(data)) {
-//      datalist.innerHTML = '';
-//      return;
-//    }
-
-//    const yaVistos = new Set();
-//    datalist.innerHTML = '';
-
-//    data.forEach(director => {
-//      if (yaVistos.has(director.cedula)) return;
-//      yaVistos.add(director.cedula);
-
-//      const option = document.createElement('option');
-//      option.value = director.cedula;
-//      option.label = director.nombresapellidos;
-//      datalist.appendChild(option);
-//    });
-//  } catch (e) {
-//    console.error('❌ Error en sugerencia de directores:', e);
-//    datalist.innerHTML = '';
-//  }
-//}
 
 // 🔎 Sugerencia parcial por nombre o cédula desde campo auxiliar
 async function buscarDirectoresSugeridos(texto) {
   const lista = document.getElementById('listaSugerenciasDirector');
   lista.innerHTML = '';
-
   if (!texto || texto.trim().length < 3) return;
 
   try {
@@ -255,7 +141,6 @@ async function buscarDirectoresSugeridos(texto) {
     if (!Array.isArray(data)) return;
 
     const yaVistos = new Set();
-
     data.forEach(director => {
       if (yaVistos.has(director.cedula)) return;
       yaVistos.add(director.cedula);
@@ -263,16 +148,12 @@ async function buscarDirectoresSugeridos(texto) {
       const item = document.createElement('li');
       item.textContent = `${director.nombresapellidosrep || director.nombresapellidos} (${director.cedula})`;
       item.style.cursor = 'pointer';
-
       item.onclick = () => {
         document.getElementById('ceduladirector').value = director.cedula;
-        document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
-        document.getElementById('telefonodirector').value = director.telefono || '';
-        document.getElementById('correodirector').value = director.correo || '';
+        mostrarDatosDirector(director);
         document.getElementById('mensajeDirector').textContent = '✔ Director seleccionado correctamente.';
         lista.innerHTML = '';
       };
-
       lista.appendChild(item);
     });
 
@@ -289,7 +170,7 @@ async function buscarDirectoresSugeridos(texto) {
   }
 }
 
-// 🧠 Búsqueda por cédula (modo edición)
+// 🧠 Búsqueda por cédula exacta (modo edición)
 async function buscarDirector() {
   const cedula = document.getElementById('ceduladirector').value.trim();
   if (!cedula) return;
@@ -311,13 +192,6 @@ async function buscarDirector() {
     mostrarDatosDirector({});
     document.getElementById('mensajeDirector').textContent = '⚠️ Error al conectar con base de datos.';
   }
-}
-
-// 🪄 Actualiza campos visibles en el formulario
-function mostrarDatosDirector(director = {}) {
-  document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
-  document.getElementById('telefonodirector').value = director.telefono || '';
-  document.getElementById('correodirector').value = director.correo || '';
 }
 
 // Lote 3
@@ -386,10 +260,9 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
     alert(`🚨 Error inesperado: ${err.message}`);
     console.error(err);
   }
-}
+});
 
-);
-
+// 🔹 Carga de circuitos para filtros visuales
 async function cargarCircuitosFiltro() {
   const filtro = document.getElementById('filtroCircuito');
   if (!filtro) return;
@@ -414,9 +287,7 @@ async function cargarCircuitosFiltro() {
   }
 }
 
-// Lote 4
-
-// 🔹 CARGA Y RENDER DE TABLA DINÁMICA
+// lote 4
 
 document.addEventListener('DOMContentLoaded', async () => {
   await cargarResumen();
@@ -433,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   for (const inst of instituciones) {
     const { data: director } = await supabase
-      .from('raclobatera')
+      .from('raclobatera') // ⚠️ Asegúrate que esta tabla sea la correcta fuente de datos del director
       .select('nombresapellidosrep, telefono, correo')
       .eq('cedula', inst.ceduladirector)
       .single();
@@ -493,11 +364,9 @@ window.cargarCircuitos = cargarCircuitos;
 window.cargarResumen = cargarResumen;
 window.mostrarDetalleSupervisor = mostrarDetalleSupervisor;
 window.cargarCircuitosFiltro = cargarCircuitosFiltro;
-// 🔗 Exposición global (si usas script con type="module")
 window.sugerirDirector = sugerirDirector;
 window.buscarDirector = buscarDirector;
 window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
-
 
 // 🔹 FUNCIÓN GLOBAL PARA ELIMINAR INSTITUCIÓN
 
