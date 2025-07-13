@@ -1,8 +1,11 @@
 //instituciones.js Lote 1
+// 🔹 IMPORTACIONES
 import { validarCampos } from './utils/validacion.js';
 import { crearTablaConFiltros } from './tablasCDCE.js';
 
 const supabase = window.supabase;
+
+// 🔹 UTILIDADES DE FORMULARIO
 
 function cerrarFormulario() {
   document.getElementById('modalRegistro').style.display = 'none';
@@ -11,6 +14,13 @@ function cerrarFormulario() {
 function editar(codigodea) {
   const inst = window.instituciones?.find(i => i.codigodea === codigodea);
   if (inst) abrirFormulario(inst);
+}
+
+function actualizarVisibilidadBotonEliminar() {
+  const modo = document.getElementById('modoFormulario')?.value;
+  const btnEliminar = document.getElementById('btnEliminarInstitucion');
+  if (!btnEliminar) return;
+  btnEliminar.style.display = modo === 'editar' ? 'inline-block' : 'none';
 }
 
 function abrirFormulario(institucion = null) {
@@ -31,27 +41,29 @@ function abrirFormulario(institucion = null) {
   document.getElementById('codigodea').readOnly = (modo === 'editar');
 
   cargarCircuitos().then(() => {
-    const selCircuito = document.getElementById('codcircuitoedu');
-    if (selCircuito && !selCircuito.dataset.listenerAsignado) {
-      selCircuito.addEventListener('change', mostrarDetalleSupervisor);
-      selCircuito.dataset.listenerAsignado = 'true';
-    }
-
     if (institucion) {
       for (const [clave, valor] of Object.entries(institucion)) {
         if (form[clave]) form[clave].value = valor || '';
       }
-
+      const selCircuito = document.getElementById('codcircuitoedu');
       if (selCircuito) {
         selCircuito.value = institucion.codcircuitoedu;
         selCircuito.dispatchEvent(new Event('change'));
-      }
 
-      mostrarDatosDirector({
-        nombresapellidosrep: institucion.nombredirector || '',
-        telefono: institucion.telefonodirector || '',
-        correo: institucion.correodirector || ''
-      });
+        const opcion = selCircuito.options[selCircuito.selectedIndex];
+        const supervisorData = opcion?.dataset?.supervisor ? JSON.parse(opcion.dataset.supervisor) : {};
+        const dSupervisor = document.getElementById('detalleSupervisor');
+
+        if (dSupervisor && supervisorData.nombresapellidos) {
+          dSupervisor.innerHTML = `
+            👤 <strong>${supervisorData.nombresapellidos}</strong><br>
+            📞 ${supervisorData.telefono}<br>
+            📧 <a href="mailto:${supervisorData.correo}">${supervisorData.correo}</a>
+          `;
+        } else {
+          dSupervisor.textContent = '👤 Sin asignar';
+        }
+      }
     } else {
       const detalle = document.getElementById('detalleCircuito');
       if (detalle) detalle.textContent = 'ℹ️ Seleccione un circuito para ver su zona';
@@ -64,33 +76,7 @@ function abrirFormulario(institucion = null) {
   });
 }
 
-function actualizarVisibilidadBotonEliminar() {
-  const modo = document.getElementById('modoFormulario')?.value;
-  const btnEliminar = document.getElementById('btnEliminarInstitucion');
-  if (!btnEliminar) return;
-  btnEliminar.style.display = modo === 'editar' ? 'inline-block' : 'none';
-}
-
-function mostrarDetalleSupervisor() {
-  const selCircuito = document.getElementById('codcircuitoedu');
-  const dSupervisor = document.getElementById('detalleSupervisor');
-  if (!selCircuito || !dSupervisor) return;
-
-  const opcion = selCircuito.options[selCircuito.selectedIndex];
-  const supervisorData = opcion?.dataset?.supervisor ? JSON.parse(opcion.dataset.supervisor) : {};
-
-  if (supervisorData.nombresapellidos) {
-    dSupervisor.innerHTML = `
-      👤 <strong>${supervisorData.nombresapellidos}</strong><br>
-      📞 ${supervisorData.telefono}<br>
-      📧 <a href="mailto:${supervisorData.correo}">${supervisorData.correo}</a>
-    `;
-  } else {
-    dSupervisor.textContent = '👤 Sin asignar';
-  }
-}
-
-// Lote 2
+// lote 2
 
 function asignarListenerEliminarSiHaceFalta() {
   const btnEliminar = document.getElementById('btnEliminarInstitucion');
@@ -120,81 +106,172 @@ function validarDEA() {
     });
 }
 
-// 🔹 Mostrar campos del director en el formulario
-function mostrarDatosDirector(director = {}) {
-  document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
-  document.getElementById('telefonodirector').value = director.telefono || '';
-  document.getElementById('correodirector').value = director.correo || '';
-}
+// 🔹 DIRECTOR: Buscar y sugerir (Modificado y mejorado)
 
-// 🔎 Sugerencia parcial por nombre o cédula desde campo auxiliar
-async function buscarDirectoresSugeridos(texto) {
-  const lista = document.getElementById('listaSugerenciasDirector');
-  lista.innerHTML = '';
-  if (!texto || texto.trim().length < 3) return;
-
-  try {
-    const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
-    if (!res.ok) throw new Error(`Error ${res.status}`);
-
-    const data = await res.json();
-    if (!Array.isArray(data)) return;
-
-    const yaVistos = new Set();
-    data.forEach(director => {
-      if (yaVistos.has(director.cedula)) return;
-      yaVistos.add(director.cedula);
-
-      const item = document.createElement('li');
-      item.textContent = `${director.nombresapellidosrep || director.nombresapellidos} (${director.cedula})`;
-      item.style.cursor = 'pointer';
-      item.onclick = () => {
-        document.getElementById('ceduladirector').value = director.cedula;
-        mostrarDatosDirector(director);
-        document.getElementById('mensajeDirector').textContent = '✔ Director seleccionado correctamente.';
-        lista.innerHTML = '';
-      };
-      lista.appendChild(item);
-    });
-
-    if (lista.childElementCount === 0) {
-      const noResults = document.createElement('li');
-      noResults.textContent = 'No se encontraron coincidencias';
-      lista.appendChild(noResults);
-    }
-  } catch (e) {
-    console.error('❌ Error en buscarDirectoresSugeridos:', e.message);
-    const errorItem = document.createElement('li');
-    errorItem.textContent = '⚠️ Error al conectar con el servidor';
-    lista.appendChild(errorItem);
-  }
-}
-
-// 🧠 Búsqueda por cédula exacta (modo edición)
 async function buscarDirector() {
   const cedula = document.getElementById('ceduladirector').value.trim();
   if (!cedula) return;
 
   try {
     const res = await fetch(`/directores/cedula/${cedula}`);
-    if (!res.ok) throw new Error(`Error ${res.status}`);
-
     const data = await res.json();
-    if (data?.cedula && data?.nombresapellidosrep) {
-      mostrarDatosDirector(data);
-      document.getElementById('mensajeDirector').textContent = '✔ Director validado desde base institucional.';
-    } else {
-      mostrarDatosDirector({});
-      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
-    }
-  } catch (e) {
-    console.error('❌ Error al buscar director:', e.message);
-    mostrarDatosDirector({});
-    document.getElementById('mensajeDirector').textContent = '⚠️ Error al conectar con base de datos.';
+    document.getElementById('nombredirector').value = data?.nombresapellidosrep || '';
+    document.getElementById('telefonodirector').value = data?.telefono || '';
+    document.getElementById('correodirector').value = data?.correo || '';
+  } catch {
+    document.getElementById('nombredirector').value = '';
+    document.getElementById('telefonodirector').value = '';
+    document.getElementById('correodirector').value = '';
   }
 }
 
-// Lote 3
+async function sugerirDirector() {
+  const input = document.getElementById('ceduladirector');
+  const texto = input.value.trim();
+  const datalist = document.getElementById('listaDirectores');
+  if (texto.length < 3) return datalist.innerHTML = '';
+
+  try {
+    const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+    const data = await res.json();
+    datalist.innerHTML = '';
+
+    data.forEach(d => {
+      const option = document.createElement('option');
+      option.value = d.cedula;
+      option.label = `${d.nombresapellidosrep} (${d.cedula})`;
+      datalist.appendChild(option);
+    });
+  } catch (err) {
+    console.error('Error en sugerencia de directores:', err);
+  }
+}
+
+// lote 3
+
+// 🔹 RESUMEN ESTADÍSTICO
+
+async function cargarResumen() {
+  const refs = {
+    instituciones: document.getElementById('totalInstituciones'),
+    dependencias: document.getElementById('totalDependencias'),
+    niveles: document.getElementById('totalNiveles'),
+    directores: document.getElementById('totalDirectores')
+  };
+
+  for (const el of Object.values(refs)) el.textContent = '⌛';
+
+  try {
+    const res = await fetch('/instituciones/resumen');
+    const data = await res.json();
+
+    const animar = (el, final) => {
+      let valor = parseInt(el.textContent) || 0;
+      const paso = (final - valor) / 20;
+      let contador = 0;
+
+      const intervalo = setInterval(() => {
+        contador++;
+        el.textContent = Math.round(valor + paso * contador);
+        if (contador >= 20) {
+          el.textContent = final;
+          el.classList.add('pop');
+          clearInterval(intervalo);
+          setTimeout(() => el.classList.remove('pop'), 400);
+        }
+      }, 20);
+    };
+
+    animar(refs.instituciones, data.totalInstituciones ?? 0);
+    animar(refs.dependencias, data.totalDependencias ?? 0);
+    animar(refs.niveles, data.totalNiveles ?? 0);
+    animar(refs.directores, data.totalDirectores ?? 0);
+  } catch (err) {
+    console.error('❌ Resumen no disponible:', err);
+    for (const el of Object.values(refs)) el.textContent = '—';
+  }
+}
+
+// 🔹 CARGAR CIRCUITOS PARA FORMULARIO
+
+async function cargarCircuitos() {
+  try {
+    const res = await fetch('/circuitos/listar');
+    if (!res.ok) throw new Error(await res.text());
+
+    const datos = await res.json();
+    const select = document.getElementById('codcircuitoedu');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Seleccione un circuito</option>';
+
+    datos.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.codcircuitoedu;
+      option.textContent = `${c.codcircuitoedu} — ${c.nombrecircuito}`;
+      option.dataset.zona = c.zona || '';
+      option.dataset.supervisor = JSON.stringify(c.supervisor || {});
+      select.appendChild(option);
+    });
+
+    if (!select.dataset.listenerAsignado) {
+      select.dataset.listenerAsignado = 'true';
+      select.addEventListener('change', () => {
+        const opcion = select.options[select.selectedIndex];
+        const zona = opcion?.dataset?.zona || '';
+        const supervisor = opcion?.dataset?.supervisor
+          ? JSON.parse(opcion.dataset.supervisor)
+          : {};
+
+        const dZona = document.getElementById('detalleCircuito');
+        const dSupervisor = document.getElementById('detalleSupervisor');
+
+        if (dZona) dZona.textContent = zona ? `🗺️ Zona: ${zona}` : '';
+        if (dSupervisor && supervisor.nombresapellidos) {
+          dSupervisor.innerHTML = `
+            👤 <strong>${supervisor.nombresapellidos}</strong><br>
+            📞 ${supervisor.telefono}<br>
+            📧 <a href="mailto:${supervisor.correo}">${supervisor.correo}</a>
+          `;
+        } else {
+          dSupervisor.textContent = '👤 Sin asignar';
+        }
+      });
+    }
+  } catch (err) {
+    console.error('❌ Error al cargar circuitos:', err);
+    const select = document.getElementById('codcircuitoedu');
+    if (select) select.innerHTML = '<option value="">Error al cargar</option>';
+  }
+}
+
+// 🔹 CARGAR CIRCUITOS PARA FILTRO
+
+async function cargarCircuitosFiltro() {
+  const filtro = document.getElementById('filtroCircuito');
+  if (!filtro) return;
+
+  const { data: circuitos, error } = await supabase
+    .from('circuitoseducativos')
+    .select('codcircuitoedu, nombrecircuito')
+    .order('nombrecircuito', { ascending: true });
+
+  if (error) {
+    console.error('❌ Error al cargar circuitos para filtro:', error.message);
+    return;
+  }
+
+  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
+
+  for (const circuito of circuitos) {
+    const opt = document.createElement('option');
+    opt.value = circuito.codcircuitoedu;
+    opt.textContent = circuito.nombrecircuito;
+    filtro.appendChild(opt);
+  }
+}
+
+// lote 4
 
 document.getElementById('formInstitucion').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -262,32 +339,9 @@ document.getElementById('formInstitucion').addEventListener('submit', async func
   }
 });
 
-// 🔹 Carga de circuitos para filtros visuales
-async function cargarCircuitosFiltro() {
-  const filtro = document.getElementById('filtroCircuito');
-  if (!filtro) return;
+// lote 5
 
-  const { data: circuitos, error } = await supabase
-    .from('circuitoseducativos')
-    .select('codcircuitoedu, nombrecircuito')
-    .order('nombrecircuito', { ascending: true });
-
-  if (error) {
-    console.error('❌ Error al cargar circuitos para filtro:', error.message);
-    return;
-  }
-
-  filtro.innerHTML = '<option value="">Todos los circuitos</option>';
-
-  for (const circuito of circuitos) {
-    const opt = document.createElement('option');
-    opt.value = circuito.codcircuitoedu;
-    opt.textContent = circuito.nombrecircuito;
-    filtro.appendChild(opt);
-  }
-}
-
-// lote 4
+// 🔹 CARGA Y RENDER DE TABLA DINÁMICA
 
 document.addEventListener('DOMContentLoaded', async () => {
   await cargarResumen();
@@ -304,14 +358,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   for (const inst of instituciones) {
     const { data: director } = await supabase
-      .from('raclobatera') // ⚠️ Asegúrate que esta tabla sea la correcta fuente de datos del director
-      .select('nombresapellidosrep, telefono, correo')
+      .from('personal')
+      .select('nombresapellidosrep, telefono')
       .eq('cedula', inst.ceduladirector)
+      .eq('rol', 'director')
       .single();
 
     inst.nombredirector = director?.nombresapellidosrep || '—';
     inst.telefonodirector = director?.telefono || '—';
-    inst.correodirector = director?.correo || '';
   }
 
   crearTablaConFiltros({
@@ -351,22 +405,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('cargandoTabla').style.display = 'none';
 });
 
-// Lote 5
-
 // 🔹 FUNCIONES EXPUESTAS AL CONTEXTO GLOBAL
 
 window.abrirFormulario = abrirFormulario;
 window.validarDEA = validarDEA;
-window.mostrarDatosDirector = mostrarDatosDirector;
+window.buscarDirector = buscarDirector;
+window.sugerirDirector = sugerirDirector;
 window.cerrarFormulario = cerrarFormulario;
 window.editar = editar;
 window.cargarCircuitos = cargarCircuitos;
-window.cargarResumen = cargarResumen;
-window.mostrarDetalleSupervisor = mostrarDetalleSupervisor;
 window.cargarCircuitosFiltro = cargarCircuitosFiltro;
-window.sugerirDirector = sugerirDirector;
-window.buscarDirector = buscarDirector;
-window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
 
 // 🔹 FUNCIÓN GLOBAL PARA ELIMINAR INSTITUCIÓN
 
@@ -393,8 +441,6 @@ window.eliminarInstitucion = async function (codigodea) {
     document.getElementById('idInstitucionEditar').value = '';
     document.getElementById('codigodea').readOnly = false;
     document.getElementById('mensajeDEA').textContent = '';
-    document.getElementById('detalleSupervisor').textContent = '';
-    mostrarDatosDirector({});
     await cargarResumen?.();
     location.reload();
   } catch (err) {
