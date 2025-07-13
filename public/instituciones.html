@@ -1,3 +1,4 @@
+<!-- Lote 1 -->
 <!DOCTYPE html>
 <html lang="es">
 
@@ -59,15 +60,13 @@
     </div>
   </div>
 
-  <!-- 💡 Lote 2 -->
-
   <!-- ⏳ Spinner de carga -->
   <div id="cargandoTabla" class="spinner-container">
     <div class="spinner"></div>
     <p>Estamos Procesando la Información, ¡Gracias por su espera! 🌀</p>
   </div>
 
-  <!-- 📊 Tabla de instituciones -->
+  <!-- 📊 Tabla -->
   <table id="tablaInstituciones" class="display" style="width:100%">
     <thead></thead>
   </table>
@@ -101,120 +100,146 @@
     <p id="mensajeResumen" class="mensaje-resumen"></p>
   </div>
 
-  <!-- 📋 Formulario Modal de Institución -->
-  <div id="modalRegistro" style="display:none;">
+  <!-- Lote 2 -->
+
+  <!-- 📦 Modal del formulario -->
+  <div id="modalRegistro" style="display: none; position: fixed; top: 5%; left: 50%; transform: translateX(-50%);
+background: #fff; padding: 1.5rem; box-shadow: 0 0 10px #aaa; max-width: 600px; width: 90%; z-index: 999;
+max-height: 90vh; overflow-y: auto;">
+
+    <h2 id="tituloFormulario">Datos de la Institución</h2>
     <form id="formInstitucion">
+      <fieldset style="margin-bottom:1rem;">
+        <legend>Datos del Plantel</legend>
 
-      <label for="codigodea">Código DEA:</label>
-      <input type="text" id="codigodea" name="codigodea" required />
-      <span id="mensajeDEA" class="mensaje-validacion"></span>
+        <label>Código DEA:</label>
+        <input type="text" name="codigodea" id="codigodea" onblur="validarDEA()" placeholder="Requerido">
+        <span id="mensajeDEA" class="mensaje-validacion"></span>
 
-      <label for="nombreplantel">Nombre del Plantel:</label>
-      <input type="text" id="nombreplantel" name="nombreplantel" required />
-      <span id="mensajeNombre" class="mensaje-validacion"></span>
+        <label>Nombre del Plantel:</label>
+        <input type="text" id="nombreplantel" name="nombreplantel" placeholder="Requerido">
+        <span id="mensajeNombre" class="mensaje-validacion"></span>
 
-      <!-- 🔍 Sugerencia de directores -->
-      <label for="ceduladirector">Cédula del Director:</label>
-      <input type="text" id="ceduladirector" list="listaDirectores" oninput="sugerirDirector()"
-        onblur="buscarDirector()" required />
-      <datalist id="listaDirectores"></datalist>
-      <span id="mensajeDirector" class="mensaje-validacion"></span>
+        <!-- 🔍 Sugerencia de director -->
+        <label>Cédula del Director *:</label>
+        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()"
+          onblur="buscarDirector()" list="listaDirectores" autocomplete="off" placeholder="Ej. V12345678">
+        <datalist id="listaDirectores"></datalist>
+        <span id="mensajeDirector" class="mensaje-validacion"></span>
 
-      <!-- 📇 Datos referenciales del director -->
-      <fieldset class="fieldset-lectura">
-        <legend>Datos del Director</legend>
-        <input type="text" id="nombredirector" class="lectura" placeholder="Nombre completo" readonly />
-        <input type="text" id="telefonodirector" class="lectura" placeholder="Teléfono" readonly />
-        <input type="email" id="correodirector" class="lectura" placeholder="Correo electrónico" readonly />
-        <p class="mensaje-informativo">📌 Estos datos se extraen automáticamente del módulo “Personal”.</p>
-      </fieldset>
+        <!-- 📋 Datos referenciales del director -->
+        <fieldset disabled class="fieldset-lectura">
+          <legend>
+            <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
+          </legend>
 
-      <!-- 💡 Lote 3 -->
+          <label for="nombredirector">Nombre:</label>
+          <input id="nombredirector" type="text" class="lectura" readonly>
 
-      <label for="codigodep">Código de dependencia:</label>
-      <input type="text" id="codigodep" name="codigodep" required />
-      <span id="mensajeCodDependencia" class="mensaje-validacion"></span>
+          <label for="telefonodirector">Teléfono:</label>
+          <input id="telefonodirector" type="text" class="lectura" readonly>
 
-      <label for="dependencia">Dependencia:</label>
-      <select id="dependencia" name="dependencia">
-        <option value="">Seleccionar</option>
-        <option value="Nacional">Nacional</option>
-        <option value="Estadal">Estadal</option>
-        <option value="Municipal">Municipal</option>
-        <option value="Privada">Privada</option>
-      </select>
-      <span id="mensajeDependencia" class="mensaje-validacion"></span>
+          <label for="correodirector">Correo:</label>
+          <input id="correodirector" type="email" class="lectura" readonly>
 
-      <label for="niveledu">Nivel Educativo:</label>
-      <select id="niveledu" name="niveledu">
-        <option value="">Seleccionar</option>
-        <option value="Maternal">Maternal</option>
-        <option value="Inicial">Inicial</option>
-        <option value="Primaria">Primaria</option>
-        <option value="Media General">Media General</option>
-        <option value="Especial">Especial</option>
-        <option value="Adultos">Adultos</option>
-      </select>
-      <span id="mensajeNivel" class="mensaje-validacion"></span>
+          <p class="mensaje-informativo">
+            📌 Estos datos provienen del registro del personal y se actualizan desde la sección
+            <strong>“Personal”</strong>.
+          </p>
+        </fieldset>
 
-      <label for="turno">Turno:</label>
-      <select id="turno" name="turno">
-        <option value="">Seleccionar</option>
-        <option value="Mañana">Mañana</option>
-        <option value="Tarde">Tarde</option>
-        <option value="Mañana Tarde">Mañana Tarde</option>
-      </select>
-      <span id="mensajeturno" class="mensaje-validacion"></span>
+        <label>Eponimo Anterior:</label>
+        <input type="text" id="eponimoanterior" name="eponimoanterior" placeholder="No Aplica">
 
-      <label for="parroquia">Parroquia:</label>
-      <select id="parroquia" name="parroquia">
-        <option value="">Seleccionar</option>
-        <option value="Lobatera">Lobatera</option>
-        <option value="Otra">Otra</option>
-      </select>
-      <span id="mensajeParroquia" class="mensaje-validacion"></span>
+        <label>Código de Dependencia:</label>
+        <input type="text" name="codigodep" id="codigodep" placeholder="Requerido">
+        <span id="mensajeCodDependencia" class="mensaje-validacion"></span>
 
-      <label for="codcircuitoedu">Circuito Educativo:</label>
-      <select id="codcircuitoedu" name="codcircuitoedu"></select>
-      <span id="mensajeCircuito" class="mensaje-validacion"></span>
-      <div id="detalleCircuito" class="detalle-texto"></div>
-      <div id="detalleSupervisor" class="detalle-texto"></div>
+        <label>Dependencia *:</label>
+        <select name="dependencia" id="dependencia">
+          <option value="">Seleccione</option>
+          <option value="Nacional">Nacional</option>
+          <option value="Estadal">Estadal</option>
+          <option value="Municipal">Municipal</option>
+          <option value="Privada">Privada</option>
+        </select>
+        <span id="mensajeDependencia" class="mensaje-validacion"></span>
 
-      <label for="codestadistico">Código estadístico:</label>
-      <input type="text" id="codestadistico" name="codestadistico" />
+        <label>Nivel Educativo *:</label>
+        <select name="niveledu" id="niveledu">
+          <option value="">Seleccione</option>
+          <option value="Maternal">Maternal</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Maternal Inicial">Maternal Inicial</option>
+          <option value="Primaria">Primaria</option>
+          <option value="Inicial Primaria">Inicial Primaria</option>
+          <option value="Media General">Media General</option>
+          <option value="Inicial Primaria Media General">Inicial Primaria Media General</option>
+          <option value="Especial">Especial</option>
+          <option value="Adultos">Adultos</option>
+        </select>
+        <span id="mensajeNivel" class="mensaje-validacion"></span>
 
-      <label for="codcenvot">Código CENVOT:</label>
-      <input type="text" id="codcenvot" name="codcenvot" />
+        <label for="turno">Turno Laborable *:</label>
+        <select id="turno" name="turno">
+          <option value="">Seleccione</option>
+          <option value="Mañana">Mañana</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Mañana Tarde">Mañana Tarde</option>
+        </select>
+        <span id="mensajeturno" class="mensaje-validacion"></span>
 
-      <label for="nombrecenvot">Nombre CENVOT:</label>
-      <input type="text" id="nombrecenvot" name="nombrecenvot" />
+        <label>Parroquia *:</label>
+        <select name="parroquia" id="parroquia">
+          <option value="">Seleccione</option>
+          <option value="LOBATERA">LOBATERA</option>
+          <option value="CONSTITUCION">CONSTITUCIÓN</option>
+        </select>
+        <span id="mensajeParroquia" class="mensaje-validacion"></span>
 
-      <label for="eponimoanterior">Epónimo anterior:</label>
-      <input type="text" id="eponimoanterior" name="eponimoanterior" />
+        <label for="codcircuitoedu">Circuito Educativo: *</label>
+        <select id="codcircuitoedu" name="codcircuitoedu">
+          <option value="">Seleccione un circuito</option>
+        </select>
+        <span id="mensajeCircuito" class="mensaje-validacion"></span>
 
-      <!-- 🏷️ Status institucional -->
-      <label for="status">Status:</label>
-      <select id="status" name="status">
-        <option value="Activo">Activo</option>
-        <option value="Inactivo">Inactivo</option>
-      </select>
-      <span id="mensajeStatus" class="mensaje-validacion"></span>
+        <p id="detalleCircuito" class="detalle-texto"></p>
+        <div class="detalle-info">
+          <p id="detalleSupervisor"></p>
+        </div>
 
-      <!-- 🧷 Campos ocultos -->
-      <input type="hidden" name="registrado" value="">
-      <input type="hidden" id="modoFormulario" value="crear" />
-      <input type="hidden" id="idInstitucionEditar" />
+        <label for="codestadistico">Código Estadístico</label>
+        <input type="text" id="codestadistico" name="codestadistico" placeholder="De poseer código estadístico">
 
-      <!-- 🟢 Botones de acción -->
-      <button type="submit">Guardar Institución</button>
-      <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
-      <button type="button" id="btnEliminarInstitucion" class="peligro" style="display: none;">
-        Eliminar institución 🗑️
-      </button>
+        <label for="codcenvot">Código Centro de Votación</label>
+        <input type="text" id="codcenvot" name="codcenvot" placeholder="Ingrese si el plantel es Centro Electoral">
+
+        <label for="nombrecenvot">Nombre Centro de Votación</label>
+        <input type="text" id="nombrecenvot" name="nombrecenvot" placeholder="Nombre ante el (CNE)">
+
+        <!-- Lote 3 -->
+
+        <!-- 🏷️ Status institucional -->
+        <label>Status *:</label>
+        <select name="status" id="status">
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+        </select>
+        <span id="mensajeStatus" class="mensaje-validacion"></span>
+
+        <!-- 🧷 Campos ocultos -->
+        <input type="hidden" name="registrado" value="">
+        <input type="hidden" id="modoFormulario" value="crear" />
+        <input type="hidden" id="idInstitucionEditar" />
+
+        <!-- 🟢 Botones de acción -->
+        <button type="submit">Guardar Institución</button>
+        <button type="button" onclick="cerrarFormulario()" style="margin-left:1rem;">Cancelar</button>
+        <button type="button" id="btnEliminarInstitucion" class="peligro" style="display: none;">
+          Eliminar institución 🗑️
+        </button>
     </form>
   </div>
-
-  <!-- 💡 Lote 4 -->
 
   <!-- 📚 Librerías externas necesarias -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -222,7 +247,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-  <!-- 🔐 Inicialización del cliente Supabase (frontend) -->
+  <!-- 🔐 Inicialización del cliente Supabase -->
   <script>
     window.supabase = supabase.createClient(
       'https://ymtagfdcrejmuyqflvif.supabase.co',
@@ -232,8 +257,8 @@
 
   <!-- 🧠 Scripts internos y módulos CDCE -->
   <script src="js/utils.js"></script>
-  <script src="js/tablasCDCE.js" type="module"></script>
-  <script src="js/instituciones.js" type="module"></script>
+  <script type="module" src="js/tablasCDCE.js"></script>
+  <script type="module" src="js/instituciones.js"></script>
 </body>
 
 </html>
