@@ -209,62 +209,38 @@ function mostrarDatosDirector(director) {
 
 // 🔹 DIRECTOR: 🔍 Sugerencia de directores mientras se escribe
 // 🔍 Sugerencia de directores mientras se escribe en campo de cédula
-// 🔍 Sugerencia de directores mientras se escribe en campo de cédula
-async function sugerirDirector() {
-  const texto = document.getElementById('ceduladirector').value.trim();
-  const datalist = document.getElementById('listaDirectores');
+//async function sugerirDirector() {
+//  const texto = document.getElementById('ceduladirector').value.trim();
+//  const datalist = document.getElementById('listaDirectores');
+//
+//  try {
+//    const res = await fetch(`/directores/buscar?q=${texto}`);
+//    const data = await res.json();
 
-  try {
-    const res = await fetch(`/directores/buscar?q=${texto}`);
-    const data = await res.json();
+//    if (!Array.isArray(data)) {
+//      datalist.innerHTML = '';
+//      return;
+//    }
 
-    if (!Array.isArray(data)) {
-      datalist.innerHTML = '';
-      return;
-    }
+//    const yaVistos = new Set();
+//    datalist.innerHTML = '';
 
-    const yaVistos = new Set();
-    datalist.innerHTML = '';
+//    data.forEach(director => {
+//      if (yaVistos.has(director.cedula)) return;
+//      yaVistos.add(director.cedula);
 
-    data.forEach(director => {
-      if (yaVistos.has(director.cedula)) return;
-      yaVistos.add(director.cedula);
+//      const option = document.createElement('option');
+//      option.value = director.cedula;
+//      option.label = director.nombresapellidos;
+//      datalist.appendChild(option);
+//    });
+//  } catch (e) {
+//    console.error('❌ Error en sugerencia de directores:', e);
+//    datalist.innerHTML = '';
+//  }
+//}
 
-      const option = document.createElement('option');
-      option.value = director.cedula;
-      option.label = director.nombresapellidos;
-      datalist.appendChild(option);
-    });
-  } catch (e) {
-    console.error('❌ Error en sugerencia de directores:', e);
-    datalist.innerHTML = '';
-  }
-}
-
-// 🧠 Búsqueda directa por cédula para autocompletar datos
-async function buscarDirector() {
-  const cedula = document.getElementById('ceduladirector').value.trim();
-  if (!cedula) return;
-
-  try {
-    const res = await fetch(`/directores/cedula/${cedula}`);
-    const data = await res.json();
-
-    if (data?.cedula && data?.nombresapellidosrep) {
-      mostrarDatosDirector(data);
-      document.getElementById('mensajeDirector').textContent = '✔ Director validado exitosamente.';
-    } else {
-      mostrarDatosDirector({});
-      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
-    }
-  } catch (e) {
-    console.error('❌ Error al buscar director por cédula:', e);
-    mostrarDatosDirector({});
-    document.getElementById('mensajeDirector').textContent = '❌ Error al validar director.';
-  }
-}
-
-// 🔎 Búsqueda independiente desde campo auxiliar (nombre o cédula parcial)
+// 🔎 Sugerencia parcial por nombre o cédula desde campo auxiliar
 async function buscarDirectoresSugeridos(texto) {
   const lista = document.getElementById('listaSugerenciasDirector');
   lista.innerHTML = '';
@@ -273,8 +249,9 @@ async function buscarDirectoresSugeridos(texto) {
 
   try {
     const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
-    const data = await res.json();
+    if (!res.ok) throw new Error(`Error ${res.status}`);
 
+    const data = await res.json();
     if (!Array.isArray(data)) return;
 
     const yaVistos = new Set();
@@ -284,13 +261,15 @@ async function buscarDirectoresSugeridos(texto) {
       yaVistos.add(director.cedula);
 
       const item = document.createElement('li');
-      item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+      item.textContent = `${director.nombresapellidosrep || director.nombresapellidos} (${director.cedula})`;
       item.style.cursor = 'pointer';
 
       item.onclick = () => {
-        const campoCedula = document.getElementById('ceduladirector');
-        campoCedula.value = director.cedula;
-        campoCedula.dispatchEvent(new Event('blur')); // activa búsqueda completa
+        document.getElementById('ceduladirector').value = director.cedula;
+        document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
+        document.getElementById('telefonodirector').value = director.telefono || '';
+        document.getElementById('correodirector').value = director.correo || '';
+        document.getElementById('mensajeDirector').textContent = '✔ Director seleccionado correctamente.';
         lista.innerHTML = '';
       };
 
@@ -303,8 +282,42 @@ async function buscarDirectoresSugeridos(texto) {
       lista.appendChild(noResults);
     }
   } catch (e) {
-    console.error('❌ Error en buscarDirectoresSugeridos:', e);
+    console.error('❌ Error en buscarDirectoresSugeridos:', e.message);
+    const errorItem = document.createElement('li');
+    errorItem.textContent = '⚠️ Error al conectar con el servidor';
+    lista.appendChild(errorItem);
   }
+}
+
+// 🧠 Búsqueda por cédula (modo edición)
+async function buscarDirector() {
+  const cedula = document.getElementById('ceduladirector').value.trim();
+  if (!cedula) return;
+
+  try {
+    const res = await fetch(`/directores/cedula/${cedula}`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+
+    const data = await res.json();
+    if (data?.cedula && data?.nombresapellidosrep) {
+      mostrarDatosDirector(data);
+      document.getElementById('mensajeDirector').textContent = '✔ Director validado desde base institucional.';
+    } else {
+      mostrarDatosDirector({});
+      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
+    }
+  } catch (e) {
+    console.error('❌ Error al buscar director:', e.message);
+    mostrarDatosDirector({});
+    document.getElementById('mensajeDirector').textContent = '⚠️ Error al conectar con base de datos.';
+  }
+}
+
+// 🪄 Actualiza campos visibles en el formulario
+function mostrarDatosDirector(director = {}) {
+  document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
+  document.getElementById('telefonodirector').value = director.telefono || '';
+  document.getElementById('correodirector').value = director.correo || '';
 }
 
 // Lote 3

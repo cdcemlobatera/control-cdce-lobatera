@@ -209,7 +209,7 @@ max-height: 90vh; overflow-y: auto;">
         <legend>Datos del Director</legend>
 
         <label for="ceduladirector">Cédula del Director *:</label><br>
-        <input type="text" id="ceduladirector" name="ceduladirector" list="listaDirectores" autocomplete="off" required
+        <input type="text" id="ceduladirector" name="ceduladirector" autocomplete="off" required
           oninput="if (this.value.length >= 3) sugerirDirector();" onblur="buscarDirector()" /><br>
 
         <datalist id="listaDirectores"></datalist><br>

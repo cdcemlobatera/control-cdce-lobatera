@@ -327,78 +327,54 @@ app.get('/circuitos/listar', async (req, res) => {
 
 // 🔎 Buscar director por cédula (V12642865, sin importar mayúsculas)
 // 🔍 Función sugerida para búsqueda parcial y selección de directores
-async function buscarDirectoresSugeridos(texto) {
-  const lista = document.getElementById('listaSugerenciasDirector');
-  lista.innerHTML = '';
-
-  if (!texto || texto.trim().length < 3) return;
-
-  try {
-    const res = await fetch(`/directores/buscar?q=${texto.trim()}`);
-    if (!res.ok) throw new Error(`Respuesta no válida: ${res.status}`);
-
-    const data = await res.json();
-    if (!Array.isArray(data)) return;
-
-    const yaVistos = new Set();
-
-    data.forEach(director => {
-      if (yaVistos.has(director.cedula)) return;
-      yaVistos.add(director.cedula);
-
-      const item = document.createElement('li');
-      item.textContent = `${director.nombresapellidosrep || director.nombresapellidos} (${director.cedula})`;
-      item.style.cursor = 'pointer';
-
-      item.onclick = () => {
-        // ← Rellenar todos los campos directamente
-        document.getElementById('ceduladirector').value = director.cedula;
-        document.getElementById('nombredirector').value = director.nombresapellidosrep || director.nombresapellidos || '';
-        document.getElementById('telefonodirector').value = director.telefono || '';
-        document.getElementById('correodirector').value = director.correo || '';
-
-        document.getElementById('mensajeDirector').textContent = '✔ Director seleccionado correctamente.';
-        lista.innerHTML = '';
-      };
-
-      lista.appendChild(item);
-    });
-
-    if (lista.childElementCount === 0) {
-      const noResults = document.createElement('li');
-      noResults.textContent = 'No se encontraron coincidencias';
-      lista.appendChild(noResults);
-    }
-  } catch (e) {
-    console.error('❌ Error en buscarDirectoresSugeridos:', e.message);
-    const errorItem = document.createElement('li');
-    errorItem.textContent = '⚠️ Error al conectar con el servidor';
-    lista.appendChild(errorItem);
-  }
-}
-
-// 🧠 Búsqueda directa por cédula (usado en modo edición)
-async function buscarDirector() {
-  const cedula = document.getElementById('ceduladirector').value.trim();
-  if (!cedula) return;
+// 🔎 Buscar directores por nombre o cédula parcial
+app.get('/directores/buscar', async (req, res) => {
+  const query = req.query.q?.trim();
+  if (!query || query.length < 3) return res.json([]);
 
   try {
-    const res = await fetch(`/directores/cedula/${cedula}`);
-    const data = await res.json();
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('rol', 'director')
+      .or(`nombresapellidos.ilike.%${query}%,cedula.ilike.%${query}%`);
 
-    if (data?.cedula && data?.nombresapellidosrep) {
-      mostrarDatosDirector(data);
-      document.getElementById('mensajeDirector').textContent = '✔ Director cargado correctamente desde base institucional.';
-    } else {
-      mostrarDatosDirector({});
-      document.getElementById('mensajeDirector').textContent = '❌ No se encontró director con esa cédula.';
+    if (error) {
+      console.error('❌ Supabase error en búsqueda parcial:', error.message);
+      return res.status(500).json([]);
     }
+
+    res.json(data || []);
   } catch (e) {
-    console.error('❌ Error al buscar director:', e);
-    mostrarDatosDirector({});
-    document.getElementById('mensajeDirector').textContent = '❌ Error al conectar con base de datos.';
+    console.error('❌ Excepción en /directores/buscar:', e);
+    res.status(500).json([]);
   }
-}
+});
+
+// 🔍 Buscar director por cédula exacta (modo edición)
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula?.trim();
+  if (!cedula) return res.status(400).json({});
+
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos AS nombresapellidosrep, telefono, correo')
+      .eq('cedula', cedula)
+      .eq('rol', 'director')
+      .single();
+
+    if (error || !data) {
+      console.warn(`❌ No se encontró director con cédula: ${cedula}`);
+      return res.status(404).json({});
+    }
+
+    res.json(data);
+  } catch (e) {
+    console.error('❌ Error en /directores/cedula:', e);
+    res.status(500).json({});
+  }
+});
 
 if (!PORT) {
   console.warn('⚠️ La variable de entorno PORT no está definida. Usando 10000 por defecto.');
