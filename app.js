@@ -166,11 +166,6 @@ app.get('/directores/cedula/:cedula', async (req, res) => {
   }
 });
 
-// 🟢 INICIO DEL SERVIDOR
-app.listen(PORT, () => {
-  console.log(`✅ Control-CDCE-Lobatera activo en puerto ${PORT}`);
-});
-
 // Lote 2
 
 // ─── 📡 DIRECTORES: BÚSQUEDA INTEGRADA ─────────────────────────
@@ -437,6 +432,7 @@ app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
+// 🟢 INICIO DEL SERVIDOR
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor escuchando en http://0.0.0.0:${PORT}`);
 });
