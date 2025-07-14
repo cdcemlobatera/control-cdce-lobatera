@@ -106,25 +106,30 @@ function validarDEA() {
     });
 }
 
-// 🔹 DIRECTOR: Buscar y sugerir (Modificado y mejorado)
-
+// 🔹 DIRECTOR: Buscar por cédula y mostrar datos
 async function buscarDirector() {
   const cedula = document.getElementById('ceduladirector').value.trim();
   if (!cedula) return;
 
   try {
     const res = await fetch(`/directores/cedula/${cedula}`);
+    if (!res.ok) throw new Error('No encontrado');
+
     const data = await res.json();
-    document.getElementById('nombredirector').value = data?.nombresapellidosrep || '';
-    document.getElementById('telefonodirector').value = data?.telefono || '';
-    document.getElementById('correodirector').value = data?.correo || '';
-  } catch {
+    document.getElementById('nombredirector').value = data.nombresapellidos || '';
+    document.getElementById('telefonodirector').value = data.telefono || '';
+    document.getElementById('correodirector').value = data.correo || '';
+    document.getElementById('mensajeDirector').textContent = '✅ Director asignado correctamente';
+  } catch (err) {
     document.getElementById('nombredirector').value = '';
     document.getElementById('telefonodirector').value = '';
     document.getElementById('correodirector').value = '';
+    document.getElementById('mensajeDirector').textContent = '⚠️ No se pudo obtener datos del director';
+    console.error('Error al buscar director:', err);
   }
 }
 
+// 🔎 DIRECTOR: Sugerir por fragmentos de texto
 async function sugerirDirector() {
   const input = document.getElementById('ceduladirector');
   const texto = input.value.trim();
@@ -133,18 +138,54 @@ async function sugerirDirector() {
 
   try {
     const res = await fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`);
+    if (!res.ok) throw new Error('Sugerencia fallida');
+
     const data = await res.json();
     datalist.innerHTML = '';
 
-    data.forEach(d => {
+    data.forEach(director => {
       const option = document.createElement('option');
-      option.value = d.cedula;
-      option.label = `${d.nombresapellidosrep} (${d.cedula})`;
+      option.value = director.cedula;
+      option.label = `${director.nombresapellidos} (${director.cedula})`;
       datalist.appendChild(option);
     });
   } catch (err) {
-    console.error('Error en sugerencia de directores:', err);
+    console.error('Error en sugerencias de directores:', err);
+    datalist.innerHTML = '';
   }
+}
+
+function buscarDirectoresSugeridos(texto) {
+  const lista = document.getElementById('listaSugerenciasDirector');
+  if (texto.length < 3) {
+    lista.innerHTML = '';
+    return;
+  }
+
+  fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`)
+    .then(res => res.json())
+    .then(data => {
+      lista.innerHTML = '';
+      data.forEach(director => {
+        const item = document.createElement('li');
+        item.textContent = `${director.nombresapellidos} (${director.cedula})`;
+        item.onclick = () => seleccionarDirector(director);
+        lista.appendChild(item);
+      });
+    })
+    .catch(err => {
+      console.error('Error al buscar sugerencias:', err);
+      lista.innerHTML = '<li>Error al cargar sugerencias</li>';
+    });
+}
+
+function seleccionarDirector(director) {
+  document.getElementById('ceduladirector').value = director.cedula || '';
+  document.getElementById('nombredirector').value = director.nombresapellidos || '';
+  document.getElementById('telefonodirector').value = director.telefono || '';
+  document.getElementById('correodirector').value = director.correo || '';
+  document.getElementById('mensajeDirector').textContent = '✅ Director seleccionado correctamente';
+  document.getElementById('listaSugerenciasDirector').innerHTML = '';
 }
 
 // lote 3

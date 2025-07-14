@@ -180,15 +180,7 @@ max-height: 90vh; overflow-y: auto;">
           <p id="detalleSupervisor"></p>
         </div>
 
-        <!-- 🔍 Sugerencia de director -->
-        <label>Cédula del Director *:</label>
-        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()"
-          onblur="buscarDirector()" list="listaDirectores" autocomplete="off" placeholder="Ej. V12345678">
-        <datalist id="listaDirectores"></datalist>
-        <span id="mensajeDirector" class="mensaje-validacion"></span>
-
-        <!-- 📋 Busqueda del Director -->
-
+        <!-- 📋 Busqueda del director -->
         <fieldset>
           <legend>🔍 Buscar director por nombre o cédula parcial</legend>
           <input type="text" id="busquedaDirector" placeholder="Ej. Aldo, V12..." autocomplete="off"

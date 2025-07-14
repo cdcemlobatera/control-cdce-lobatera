@@ -260,6 +260,48 @@ app.get('/instituciones/:id', async (req, res) => {
   });
 });
 
+// ─── 🔍 Buscar Director 
+app.get('/directores/buscar', async (req, res) => {
+  const texto = req.query.q;
+  if (!texto || texto.length < 2) {
+    return res.json([]);
+  }
+
+  const { data, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos')
+    .ilike('cedula', `%${texto}%`)
+    .or(`nombresapellidos.ilike.%${texto}%`)
+    .eq('rol', 'director')
+    .limit(10);
+
+  if (error) {
+    console.error('Error al buscar sugerencias de directores:', error);
+    return res.status(500).json({ error: 'Error al buscar sugerencias' });
+  }
+
+  res.json(data);
+});
+
+//🔍 Buscar Director por cedula
+
+app.get('/directores/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula;
+
+  const { data, error } = await supabase
+    .from('personal')
+    .select('nombresapellidos, telefono, correo')
+    .eq('cedula', cedula)
+    .eq('rol', 'director')
+    .single();
+
+  if (error || !data) {
+    return res.status(404).json({ error: 'Director no encontrado' });
+  }
+
+  res.json(data);
+});
+
 // 🗑️ Eliminar institución
 app.delete('/instituciones/:codigodea', async (req, res) => {
   const { codigodea } = req.params;
