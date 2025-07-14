@@ -173,6 +173,22 @@ app.put('/usuarios/estatus/:cedula', async (req, res) => {
   res.json({ mensaje: 'Estatus actualizado correctamente.' });
 });
 
+app.get('/personal/cedula/:cedula', async (req, res) => {
+  const cedula = req.params.cedula;
+
+  const { data, error } = await supabase
+    .from('personal')
+    .select('nombresapellidos')
+    .eq('cedula', cedula)
+    .single();
+
+  if (error || !data) {
+    return res.status(404).json({ error: 'No encontrado' });
+  }
+
+  res.json(data);
+});
+
 // lote 2
 
 // ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
