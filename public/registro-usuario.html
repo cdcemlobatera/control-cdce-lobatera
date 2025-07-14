@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Actualizar rol y estatus de usuario</title>
@@ -9,31 +10,39 @@
       padding: 2em;
       background: #f2f2f2;
     }
+
     form {
       background: white;
       padding: 20px;
       max-width: 480px;
       margin: auto;
       border-radius: 6px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
+
     h3 {
       color: #2e7d32;
     }
+
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-    input, select, button {
+
+    input,
+    select,
+    button {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
       margin-bottom: 12px;
     }
+
     input[readonly] {
       background-color: #f0f0f0;
     }
+
     button {
       background: #2e7d32;
       color: white;
@@ -41,9 +50,11 @@
       border: none;
       cursor: pointer;
     }
+
     button:hover {
       background: #1b5e20;
     }
+
     #sugerencias {
       background: #fff;
       border: 1px solid #ccc;
@@ -52,13 +63,16 @@
       overflow-y: auto;
       margin-bottom: 12px;
     }
+
     #sugerencias div {
       padding: 6px;
       cursor: pointer;
     }
+
     #sugerencias div:hover {
       background: #e0e0e0;
     }
+
     #mensaje {
       margin-top: 10px;
       font-size: 0.9em;
@@ -66,10 +80,11 @@
     }
   </style>
 </head>
+
 <body>
 
 
-<!-- 📈 Lote 2 -->
+  <!-- 📈 Lote 2 -->
 
 
   <form id="registro-form" onsubmit="event.preventDefault(); actualizarUsuario();">
@@ -106,9 +121,9 @@
     <button type="submit">Actualizar usuario</button>
     <div id="mensaje"></div>
   </form>
-  
-  
-<!-- 📈 Lote 3 -->
+
+
+  <!-- 📈 Lote 3 -->
 
   <script>
     function esCedula(valor) {
@@ -131,16 +146,21 @@
         const datos = await res.json();
         const resultados = Array.isArray(datos) ? datos : [datos];
 
+        const únicos = new Map();
         resultados.forEach((item) => {
-          const div = document.createElement('div');
-          div.textContent = `${item.nombresapellidos} (${item.cedula})`;
-          div.onclick = () => {
-            document.getElementById('cedula').value = item.cedula;
-            document.getElementById('nombre').value = item.nombresapellidos;
-            sugerencias.innerHTML = '';
-            document.getElementById('busqueda').value = '';
-          };
-          sugerencias.appendChild(div);
+          if (!únicos.has(item.cedula)) {
+            únicos.set(item.cedula, item.nombresapellidos);
+
+            const div = document.createElement('div');
+            div.textContent = `${item.nombresapellidos} (${item.cedula})`;
+            div.onclick = () => {
+              document.getElementById('cedula').value = item.cedula;
+              document.getElementById('nombre').value = item.nombresapellidos;
+              sugerencias.innerHTML = '';
+              document.getElementById('busqueda').value = '';
+            };
+            sugerencias.appendChild(div);
+          }
         });
       } catch {
         const div = document.createElement('div');
@@ -189,4 +209,5 @@
     }
   </script>
 </body>
-</html>  
+
+</html>
