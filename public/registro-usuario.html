@@ -12,7 +12,7 @@
     form {
       background: white;
       padding: 20px;
-      max-width: 420px;
+      max-width: 480px;
       margin: auto;
       border-radius: 6px;
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
@@ -44,6 +44,21 @@
     button:hover {
       background: #1b5e20;
     }
+    #sugerencias {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    #sugerencias div {
+      padding: 6px;
+      cursor: pointer;
+    }
+    #sugerencias div:hover {
+      background: #e0e0e0;
+    }
     #mensaje {
       margin-top: 10px;
       font-size: 0.9em;
@@ -53,12 +68,16 @@
 </head>
 <body>
   <form id="registro-form" onsubmit="event.preventDefault(); actualizarUsuario();">
-    <h3>🔄 Actualizar rol y estatus de usuario</h3>
+    <h3>🔄 Actualizar Usuario</h3>
+
+    <label for="busqueda">Buscar por nombre o cédula:</label>
+    <input id="busqueda" oninput="buscarUsuario()" autocomplete="off" required />
+    <div id="sugerencias"></div>
 
     <label for="cedula">Cédula:</label>
-    <input id="cedula" required onblur="buscarNombre()" />
+    <input id="cedula" readonly />
 
-    <label for="nombre">Nombres y Apellidos:</label>
+    <label for="nombre">Nombre:</label>
     <input id="nombre" readonly />
 
     <label for="rol">Nuevo Rol:</label>
@@ -84,20 +103,41 @@
   </form>
 
   <script>
-    async function buscarNombre() {
-      const cedula = document.getElementById('cedula').value.trim();
-      const nombre = document.getElementById('nombre');
-      nombre.value = '';
+    function esCedula(valor) {
+      return /^[VE]\d{6,9}$/i.test(valor.trim());
+    }
 
-      if (!cedula) return;
+    async function buscarUsuario() {
+      const entrada = document.getElementById('busqueda').value.trim();
+      const sugerencias = document.getElementById('sugerencias');
+      sugerencias.innerHTML = '';
+      if (!entrada) return;
+
+      let ruta = esCedula(entrada)
+        ? `/personal/cedula/${entrada}`
+        : `/personal/nombre/${entrada}`;
 
       try {
-        const res = await fetch('/personal/cedula/' + cedula);
+        const res = await fetch(ruta);
         if (!res.ok) throw new Error('No encontrado');
         const datos = await res.json();
-        nombre.value = datos.nombresapellidos || 'No encontrado';
+
+        const resultados = Array.isArray(datos) ? datos : [datos];
+        resultados.forEach((item) => {
+          const div = document.createElement('div');
+          div.textContent = `${item.nombresapellidos} (${item.cedula})`;
+          div.onclick = () => {
+            document.getElementById('cedula').value = item.cedula;
+            document.getElementById('nombre').value = item.nombresapellidos;
+            document.getElementById('busqueda').value = '';
+            sugerencias.innerHTML = '';
+          };
+          sugerencias.appendChild(div);
+        });
       } catch (err) {
-        nombre.value = 'No encontrado';
+        const div = document.createElement('div');
+        div.textContent = 'Sin coincidencias.';
+        sugerencias.appendChild(div);
       }
     }
 
@@ -109,7 +149,7 @@
       const mensaje = document.getElementById('mensaje');
       mensaje.textContent = '';
 
-      if (!cedula || !rol || !estatus || !nombre || nombre === 'No encontrado') {
+      if (!cedula || !nombre || !rol || !estatus || nombre === 'No encontrado') {
         mensaje.textContent = '❌ Complete todos los campos correctamente.';
         mensaje.style.color = 'red';
         return;
@@ -126,7 +166,6 @@
           mensaje.textContent = '✅ Usuario actualizado correctamente.';
           mensaje.style.color = 'green';
           document.getElementById('registro-form').reset();
-          document.getElementById('nombre').value = '';
         } else {
           const err = await res.json();
           mensaje.textContent = `❌ ${err.error || 'Error al actualizar usuario'}`;

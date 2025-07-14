@@ -148,6 +148,22 @@ app.get('/personal/cedula/:cedula', async (req, res) => {
   res.json(data);
 });
 
+app.get('/personal/nombre/:fragmento', async (req, res) => {
+  const fragmento = req.params.fragmento;
+
+  const { data, error } = await supabase
+    .from('personal')
+    .select('cedula, nombresapellidos')
+    .ilike('nombresapellidos', `%${fragmento}%`)
+    .limit(10);
+
+  if (error || !data || data.length === 0) {
+    return res.status(404).json({ error: 'Sin coincidencias por nombre' });
+  }
+
+  res.json(data);
+});
+
 
 // lote 2
 
