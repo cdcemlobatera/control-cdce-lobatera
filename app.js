@@ -266,24 +266,32 @@ app.get('/directores/buscar', async (req, res) => {
   if (!texto || texto.length < 2) return res.json([]);
 
   try {
-    const { data, error } = await supabase
+    // Búsqueda por cédula
+    const { data: porCedula, error: errorCedula } = await supabase
       .from('personal')
       .select('cedula, nombresapellidos, telefono, correo')
-      .textSearch('nombresapellidos', texto, {
-        type: 'websearch',
-        config: 'english' // Opcional, según tu configuración regional
-      })
-      .eq('rol', 'director')
-      .limit(10);
+      .ilike('cedula', `%${texto}%`)
+      .eq('rol', 'director');
 
-    if (error) {
-      console.error('🔴 Error en búsqueda:', error);
-      return res.status(500).json({ error: 'Error al buscar sugerencias' });
+    // Búsqueda por nombresapellidos
+    const { data: porNombre, error: errorNombre } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos, telefono, correo')
+      .ilike('nombresapellidos', `%${texto}%`)
+      .eq('rol', 'director');
+
+    if (errorCedula || errorNombre) {
+      console.error('Error en búsquedas paralelas:', errorCedula || errorNombre);
+      return res.status(500).json({ error: 'Error en búsquedas' });
     }
 
-    res.json(data);
+    // Combinar ambos resultados sin duplicar
+    const combinados = [...porCedula, ...porNombre];
+    const unicos = Array.from(new Map(combinados.map(d => [d.cedula, d])).values());
+
+    res.json(unicos.slice(0, 10)); // ➜ limitamos manualmente
   } catch (err) {
-    console.error('❌ Fallo general al buscar director:', err);
+    console.error('Fallo inesperado en búsqueda de directores:', err);
     res.status(500).json({ error: 'Fallo inesperado' });
   }
 });
