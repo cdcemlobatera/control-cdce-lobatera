@@ -269,7 +269,7 @@ app.get('/directores/buscar', async (req, res) => {
     .from('personal')
     .select('cedula, nombresapellidos, telefono, correo')
     .ilike('cedula', `%${texto}%`)
-    .or(`nombresapellidos.ilike.%${texto}%`)
+    .or(`cedula.ilike.%${texto}%,nombresapellidos.ilike.%${texto}%`)
     .eq('rol', 'director')
     .limit(10);
 
