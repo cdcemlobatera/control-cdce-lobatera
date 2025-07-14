@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Registrar nuevo usuario</title>
@@ -9,25 +10,36 @@
       padding: 2em;
       background: #f4f4f4;
     }
+
     form {
       background: white;
       padding: 20px;
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
       border-radius: 6px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
+
+    h3 {
+      margin-bottom: 1em;
+      color: #2e7d32;
+    }
+
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-    input, select, button {
+
+    input,
+    select,
+    button {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
       margin-bottom: 12px;
     }
+
     button {
       background: #2e7d32;
       color: white;
@@ -35,15 +47,19 @@
       border: none;
       cursor: pointer;
     }
+
     button:hover {
       background: #1b5e20;
     }
+
     #mensaje {
       margin-top: 10px;
       font-size: 0.9em;
+      text-align: center;
     }
   </style>
 </head>
+
 <body>
   <form id="registro-form" onsubmit="event.preventDefault(); registrarUsuario();">
     <h3>➕ Registrar nuevo usuario</h3>
@@ -65,7 +81,9 @@
       <option value="">Seleccione rol</option>
       <option value="admin">Administrador</option>
       <option value="director">Director</option>
+      <option value="ministerio">Ministerio</option>
       <option value="personal">Personal</option>
+      <option value="docente">Docente</option>
     </select>
 
     <button type="submit">Registrar usuario</button>
@@ -80,22 +98,30 @@
 
       if (!cedula) return;
 
-      const res = await fetch('/directores/cedula/' + cedula);
-      if (res.ok) {
+      try {
+        const res = await fetch('/personal/cedula/' + cedula);
+        if (!res.ok) throw new Error('No encontrado');
         const datos = await res.json();
-        nombre.value = datos.nombresapellidosrep || '';
-      } else {
+        nombre.value = datos.nombresapellidos || 'No encontrado';
+      } catch (err) {
         nombre.value = 'No encontrado';
-      } 
+      }
     }
 
     async function registrarUsuario() {
       const cedula = document.getElementById('cedula').value.trim();
+      const nombre = document.getElementById('nombre').value.trim();
       const clave = document.getElementById('clave').value;
       const confirmar = document.getElementById('confirmar').value;
       const rol = document.getElementById('rol').value;
       const mensaje = document.getElementById('mensaje');
       mensaje.textContent = '';
+
+      if (!cedula || !clave || !rol || !nombre || nombre === 'No encontrado') {
+        mensaje.textContent = '❌ Complete todos los campos correctamente.';
+        mensaje.style.color = 'red';
+        return;
+      }
 
       if (clave !== confirmar) {
         mensaje.textContent = '❌ Las claves no coinciden.';
@@ -103,23 +129,30 @@
         return;
       }
 
-      const res = await fetch('/usuarios/nuevo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cedula, clave, rol })
-      });
+      try {
+        const res = await fetch('/usuarios/nuevo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cedula, nombre, clave, rol, estatus: 'activo' })
+        });
 
-      if (res.ok) {
-        mensaje.textContent = '✅ Usuario registrado exitosamente.';
-        mensaje.style.color = 'green';
-        document.getElementById('registro-form').reset();
-        document.getElementById('nombre').value = '';
-      } else {
-        const err = await res.json();
-        mensaje.textContent = `❌ ${err.error || 'Error al registrar usuario'}`;
+        if (res.ok) {
+          mensaje.textContent = '✅ Usuario registrado exitosamente.';
+          mensaje.style.color = 'green';
+          document.getElementById('registro-form').reset();
+          document.getElementById('nombre').value = '';
+        } else {
+          const err = await res.json();
+          mensaje.textContent = `❌ ${err.error || 'Error al registrar usuario'}`;
+          mensaje.style.color = 'red';
+        }
+      } catch (err) {
+        mensaje.textContent = '❌ Fallo inesperado al registrar.';
         mensaje.style.color = 'red';
+        console.error(err);
       }
     }
   </script>
 </body>
+
 </html>

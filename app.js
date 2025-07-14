@@ -127,6 +127,52 @@ app.post('/registro-usuario', async (req, res) => {
   res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
+app.post('/usuarios/nuevo', async (req, res) => {
+  const { cedula, nombre, clave, rol, estatus } = req.body;
+
+  if (!cedula || !clave || !rol || !nombre) {
+    return res.status(400).json({ error: 'Datos incompletos.' });
+  }
+
+  const { data: existe } = await supabase
+    .from('usuarios')
+    .select('cedula')
+    .eq('cedula', cedula)
+    .single();
+
+  if (existe) {
+    return res.status(409).json({ error: 'La cédula ya está registrada como usuario.' });
+  }
+
+  const { error } = await supabase
+    .from('usuarios')
+    .insert([{ cedula, nombre, clave, rol, estatus: estatus || 'activo' }]);
+
+  if (error) {
+    console.error('Error al registrar usuario:', error);
+    return res.status(500).json({ error: 'Error interno al registrar.' });
+  }
+
+  res.json({ mensaje: 'Usuario creado correctamente.' });
+});
+
+app.put('/usuarios/estatus/:cedula', async (req, res) => {
+  const { estatus } = req.body;
+  const cedula = req.params.cedula;
+
+  const { error } = await supabase
+    .from('usuarios')
+    .update({ estatus })
+    .eq('cedula', cedula);
+
+  if (error) {
+    console.error('Error al cambiar estatus:', error);
+    return res.status(500).json({ error: 'No se pudo cambiar el estatus.' });
+  }
+
+  res.json({ mensaje: 'Estatus actualizado correctamente.' });
+});
+
 // lote 2
 
 // ─── 🏫 INSTITUCIONES ────────────────────────────────────────────
