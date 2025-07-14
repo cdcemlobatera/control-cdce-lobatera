@@ -174,7 +174,7 @@ function buscarDirectoresSugeridos(texto) {
       });
     })
     .catch(err => {
-      console.error('Error al buscar sugerencias:', err);
+      console.error('Error al sugerir directores:', err);
       lista.innerHTML = '<li>Error al cargar sugerencias</li>';
     });
 }
