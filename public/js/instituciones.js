@@ -400,12 +400,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   for (const inst of instituciones) {
     const { data: director } = await supabase
       .from('personal')
-      .select('nombresapellidosrep, telefono')
+      .select('nombresapellidos, telefono')
       .eq('cedula', inst.ceduladirector)
       .eq('rol', 'director')
       .single();
 
-    inst.nombredirector = director?.nombresapellidosrep || '—';
+    inst.nombredirector = director?.nombresapellidos || '—';
     inst.telefonodirector = director?.telefono || '—';
   }
 
