@@ -67,11 +67,16 @@
   </style>
 </head>
 <body>
+
+
+<!-- 📈 Lote 2 -->
+
+
   <form id="registro-form" onsubmit="event.preventDefault(); actualizarUsuario();">
     <h3>🔄 Actualizar Usuario</h3>
 
     <label for="busqueda">Buscar por nombre o cédula:</label>
-    <input id="busqueda" oninput="buscarUsuario()" autocomplete="off" required />
+    <input id="busqueda" oninput="buscarUsuario()" autocomplete="off" />
     <div id="sugerencias"></div>
 
     <label for="cedula">Cédula:</label>
@@ -101,6 +106,9 @@
     <button type="submit">Actualizar usuario</button>
     <div id="mensaje"></div>
   </form>
+  
+  
+<!-- 📈 Lote 3 -->
 
   <script>
     function esCedula(valor) {
@@ -113,7 +121,7 @@
       sugerencias.innerHTML = '';
       if (!entrada) return;
 
-      let ruta = esCedula(entrada)
+      const ruta = esCedula(entrada)
         ? `/personal/cedula/${entrada}`
         : `/personal/nombre/${entrada}`;
 
@@ -121,20 +129,20 @@
         const res = await fetch(ruta);
         if (!res.ok) throw new Error('No encontrado');
         const datos = await res.json();
-
         const resultados = Array.isArray(datos) ? datos : [datos];
+
         resultados.forEach((item) => {
           const div = document.createElement('div');
           div.textContent = `${item.nombresapellidos} (${item.cedula})`;
           div.onclick = () => {
             document.getElementById('cedula').value = item.cedula;
             document.getElementById('nombre').value = item.nombresapellidos;
-            document.getElementById('busqueda').value = '';
             sugerencias.innerHTML = '';
+            document.getElementById('busqueda').value = '';
           };
           sugerencias.appendChild(div);
         });
-      } catch (err) {
+      } catch {
         const div = document.createElement('div');
         div.textContent = 'Sin coincidencias.';
         sugerencias.appendChild(div);
@@ -166,6 +174,8 @@
           mensaje.textContent = '✅ Usuario actualizado correctamente.';
           mensaje.style.color = 'green';
           document.getElementById('registro-form').reset();
+          document.getElementById('cedula').value = '';
+          document.getElementById('nombre').value = '';
         } else {
           const err = await res.json();
           mensaje.textContent = `❌ ${err.error || 'Error al actualizar usuario'}`;
@@ -179,4 +189,4 @@
     }
   </script>
 </body>
-</html>
+</html>  

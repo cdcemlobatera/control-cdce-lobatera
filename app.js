@@ -100,7 +100,6 @@ app.post('/registro-usuario', async (req, res) => {
     return res.status(400).json({ error: 'Datos incompletos para actualización.' });
   }
 
-  // Verifica que exista en la tabla personal
   const { data: persona, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos')
@@ -111,7 +110,6 @@ app.post('/registro-usuario', async (req, res) => {
     return res.status(404).json({ error: 'La cédula no está registrada en el personal institucional' });
   }
 
-  // Si incluye clave, la cifra; si no, actualiza sin modificarla
   let camposAActualizar = { rol, estatus, codigo_dea: codigo_dea || null };
 
   if (clave && clave.length >= 6) {
