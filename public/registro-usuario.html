@@ -1,45 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
-  <title>Registrar nuevo usuario</title>
+  <title>Actualizar estatus y rol</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 2em;
-      background: #f4f4f4;
+      background: #f2f2f2;
     }
-
     form {
       background: white;
       padding: 20px;
       max-width: 420px;
       margin: auto;
       border-radius: 6px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
-
     h3 {
-      margin-bottom: 1em;
       color: #2e7d32;
     }
-
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-
-    input,
-    select,
-    button {
+    input, select, button {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
       margin-bottom: 12px;
     }
-
     button {
       background: #2e7d32;
       color: white;
@@ -47,11 +38,9 @@
       border: none;
       cursor: pointer;
     }
-
     button:hover {
       background: #1b5e20;
     }
-
     #mensaje {
       margin-top: 10px;
       font-size: 0.9em;
@@ -59,24 +48,14 @@
     }
   </style>
 </head>
-
 <body>
-  <form id="registro-form" onsubmit="event.preventDefault(); registrarUsuario();">
-    <h3>➕ Registrar nuevo usuario</h3>
+  <form id="actualizar-form" onsubmit="event.preventDefault(); actualizarUsuario();">
+    <h3>🔄 Actualizar rol y estatus de usuario</h3>
 
     <label for="cedula">Cédula:</label>
-    <input id="cedula" onblur="buscarNombre()" required />
+    <input id="cedula" required />
 
-    <label for="nombre">Nombre:</label>
-    <input id="nombre" readonly style="background-color: #f0f0f0;" />
-
-    <label for="clave">Clave:</label>
-    <input id="clave" type="password" required />
-
-    <label for="confirmar">Confirmar clave:</label>
-    <input id="confirmar" type="password" required />
-
-    <label for="rol">Rol:</label>
+    <label for="rol">Nuevo Rol:</label>
     <select id="rol" required>
       <option value="">Seleccione rol</option>
       <option value="admin">Administrador</option>
@@ -86,73 +65,54 @@
       <option value="docente">Docente</option>
     </select>
 
-    <button type="submit">Registrar usuario</button>
+    <label for="estatus">Estatus:</label>
+    <select id="estatus" required>
+      <option value="">Seleccione estatus</option>
+      <option value="activo">Activo</option>
+      <option value="inactivo">Inactivo</option>
+      <option value="suspendido">Suspendido</option>
+    </select>
+
+    <button type="submit">Actualizar usuario</button>
     <div id="mensaje"></div>
   </form>
 
   <script>
-    async function buscarNombre() {
+    async function actualizarUsuario() {
       const cedula = document.getElementById('cedula').value.trim();
-      const nombre = document.getElementById('nombre');
-      nombre.value = '';
-
-      if (!cedula) return;
-
-      try {
-        const res = await fetch('/personal/cedula/' + cedula);
-        if (!res.ok) throw new Error('No encontrado');
-        const datos = await res.json();
-        nombre.value = datos.nombresapellidos || 'No encontrado';
-      } catch (err) {
-        nombre.value = 'No encontrado';
-      }
-    }
-
-    async function registrarUsuario() {
-      const cedula = document.getElementById('cedula').value.trim();
-      const nombre = document.getElementById('nombre').value.trim();
-      const clave = document.getElementById('clave').value;
-      const confirmar = document.getElementById('confirmar').value;
       const rol = document.getElementById('rol').value;
+      const estatus = document.getElementById('estatus').value;
       const mensaje = document.getElementById('mensaje');
       mensaje.textContent = '';
 
-      if (!cedula || !clave || !rol || !nombre || nombre === 'No encontrado') {
+      if (!cedula || !rol || !estatus) {
         mensaje.textContent = '❌ Complete todos los campos correctamente.';
         mensaje.style.color = 'red';
         return;
       }
 
-      if (clave !== confirmar) {
-        mensaje.textContent = '❌ Las claves no coinciden.';
-        mensaje.style.color = 'red';
-        return;
-      }
-
       try {
-        const res = await fetch('/usuarios/nuevo', {
-          method: 'POST',
+        const res = await fetch('/usuarios/actualizar/' + cedula, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cedula, nombre, clave, rol, estatus: 'activo' })
+          body: JSON.stringify({ rol, estatus })
         });
 
         if (res.ok) {
-          mensaje.textContent = '✅ Usuario registrado exitosamente.';
+          mensaje.textContent = '✅ Usuario actualizado correctamente.';
           mensaje.style.color = 'green';
-          document.getElementById('registro-form').reset();
-          document.getElementById('nombre').value = '';
+          document.getElementById('actualizar-form').reset();
         } else {
           const err = await res.json();
-          mensaje.textContent = `❌ ${err.error || 'Error al registrar usuario'}`;
+          mensaje.textContent = `❌ ${err.error || 'Error al actualizar usuario'}`;
           mensaje.style.color = 'red';
         }
       } catch (err) {
-        mensaje.textContent = '❌ Fallo inesperado al registrar.';
+        mensaje.textContent = '❌ Fallo inesperado al actualizar.';
         mensaje.style.color = 'red';
         console.error(err);
       }
     }
   </script>
 </body>
-
 </html>

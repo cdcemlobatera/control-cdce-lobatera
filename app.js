@@ -127,33 +127,25 @@ app.post('/registro-usuario', async (req, res) => {
   res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
 });
 
-app.post('/usuarios/nuevo', async (req, res) => {
-  const { cedula, nombre, clave, rol, estatus } = req.body;
+app.put('/usuarios/actualizar/:cedula', async (req, res) => {
+  const cedula = req.params.cedula;
+  const { rol, estatus } = req.body;
 
-  if (!cedula || !clave || !rol || !nombre) {
-    return res.status(400).json({ error: 'Datos incompletos.' });
-  }
-
-  const { data: existe } = await supabase
-    .from('usuarios')
-    .select('cedula')
-    .eq('cedula', cedula)
-    .single();
-
-  if (existe) {
-    return res.status(409).json({ error: 'La cédula ya está registrada como usuario.' });
+  if (!rol || !estatus) {
+    return res.status(400).json({ error: 'Datos incompletos para actualizar.' });
   }
 
   const { error } = await supabase
     .from('usuarios')
-    .insert([{ cedula, nombre, clave, rol, estatus: estatus || 'activo' }]);
+    .update({ rol, estatus })
+    .eq('cedula', cedula);
 
   if (error) {
-    console.error('Error al registrar usuario:', error);
-    return res.status(500).json({ error: 'Error interno al registrar.' });
+    console.error('Error al actualizar usuario:', error);
+    return res.status(500).json({ error: 'No se pudo actualizar el usuario.' });
   }
 
-  res.json({ mensaje: 'Usuario creado correctamente.' });
+  res.json({ mensaje: 'Usuario actualizado correctamente.' });
 });
 
 app.put('/usuarios/estatus/:cedula', async (req, res) => {
