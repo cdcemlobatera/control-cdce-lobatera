@@ -86,17 +86,21 @@ app.get('/usuario/activo', (req, res) => {
   });
 });
 
+// Actualizacion de Usuario
+
+// Activación o actualización de usuario desde la tabla 'personal'
 app.post('/registro-usuario', async (req, res) => {
   if (req.session.rol !== 'admin' && req.session.rol !== 'ministerio') {
-    return res.status(403).json({ error: 'Acceso restringido para activar usuarios' });
+    return res.status(403).json({ error: 'Acceso restringido para actualizar usuarios' });
   }
 
-  const { cedula, rol, clave, codigo_dea } = req.body;
+  const { cedula, rol, clave, estatus, codigo_dea } = req.body;
 
-  if (!cedula || !rol || !clave || clave.length < 6) {
-    return res.status(400).json({ error: 'Datos incompletos o clave inválida' });
+  if (!cedula || !rol || !estatus) {
+    return res.status(400).json({ error: 'Datos incompletos para actualización.' });
   }
 
+  // Verifica que exista en la tabla personal
   const { data: persona, error } = await supabase
     .from('personal')
     .select('cedula, nombresapellidos')
@@ -107,62 +111,25 @@ app.post('/registro-usuario', async (req, res) => {
     return res.status(404).json({ error: 'La cédula no está registrada en el personal institucional' });
   }
 
-  const claveCifrada = await bcrypt.hash(clave, 10);
+  // Si incluye clave, la cifra; si no, actualiza sin modificarla
+  let camposAActualizar = { rol, estatus, codigo_dea: codigo_dea || null };
+
+  if (clave && clave.length >= 6) {
+    const claveCifrada = await bcrypt.hash(clave, 10);
+    camposAActualizar.clave = claveCifrada;
+  }
 
   const { error: errorUpdate } = await supabase
     .from('personal')
-    .update({
-      rol,
-      clave: claveCifrada,
-      estatus: 'ACTIVO',
-      codigo_dea: codigo_dea || null
-    })
+    .update(camposAActualizar)
     .eq('cedula', cedula);
 
   if (errorUpdate) {
-    console.error('❌ Error al activar usuario:', errorUpdate);
+    console.error('❌ Error al actualizar usuario:', errorUpdate);
     return res.status(500).json({ error: 'No se pudo actualizar el acceso' });
   }
 
-  res.status(200).json({ mensaje: `✅ Acceso habilitado para ${persona.nombresapellidos}` });
-});
-
-app.put('/usuarios/actualizar/:cedula', async (req, res) => {
-  const cedula = req.params.cedula;
-  const { rol, estatus } = req.body;
-
-  if (!rol || !estatus) {
-    return res.status(400).json({ error: 'Datos incompletos para actualizar.' });
-  }
-
-  const { error } = await supabase
-    .from('usuarios')
-    .update({ rol, estatus })
-    .eq('cedula', cedula);
-
-  if (error) {
-    console.error('Error al actualizar usuario:', error);
-    return res.status(500).json({ error: 'No se pudo actualizar el usuario.' });
-  }
-
-  res.json({ mensaje: 'Usuario actualizado correctamente.' });
-});
-
-app.put('/usuarios/estatus/:cedula', async (req, res) => {
-  const { estatus } = req.body;
-  const cedula = req.params.cedula;
-
-  const { error } = await supabase
-    .from('usuarios')
-    .update({ estatus })
-    .eq('cedula', cedula);
-
-  if (error) {
-    console.error('Error al cambiar estatus:', error);
-    return res.status(500).json({ error: 'No se pudo cambiar el estatus.' });
-  }
-
-  res.json({ mensaje: 'Estatus actualizado correctamente.' });
+  res.status(200).json({ mensaje: `✅ Acceso actualizado para ${persona.nombresapellidos}` });
 });
 
 app.get('/personal/cedula/:cedula', async (req, res) => {
@@ -180,6 +147,7 @@ app.get('/personal/cedula/:cedula', async (req, res) => {
 
   res.json(data);
 });
+
 
 // lote 2
 

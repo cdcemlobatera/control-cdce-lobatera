@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Actualizar estatus y rol</title>
+  <title>Actualizar Usuario</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -31,6 +31,9 @@
       margin-top: 4px;
       margin-bottom: 12px;
     }
+    input[readonly] {
+      background-color: #f0f0f0;
+    }
     button {
       background: #2e7d32;
       color: white;
@@ -49,11 +52,14 @@
   </style>
 </head>
 <body>
-  <form id="actualizar-form" onsubmit="event.preventDefault(); actualizarUsuario();">
+  <form id="registro-form" onsubmit="event.preventDefault(); actualizarUsuario();">
     <h3>🔄 Actualizar rol y estatus de usuario</h3>
 
     <label for="cedula">Cédula:</label>
-    <input id="cedula" required />
+    <input id="cedula" required onblur="buscarNombre()" />
+
+    <label for="nombre">Nombre:</label>
+    <input id="nombre" readonly />
 
     <label for="rol">Nuevo Rol:</label>
     <select id="rol" required>
@@ -68,9 +74,9 @@
     <label for="estatus">Estatus:</label>
     <select id="estatus" required>
       <option value="">Seleccione estatus</option>
-      <option value="activo">Activo</option>
-      <option value="inactivo">Inactivo</option>
-      <option value="suspendido">Suspendido</option>
+      <option value="ACTIVO">Activo</option>
+      <option value="INACTIVO">Inactivo</option>
+      <option value="SUSPENDIDO">Suspendido</option>
     </select>
 
     <button type="submit">Actualizar usuario</button>
@@ -78,30 +84,49 @@
   </form>
 
   <script>
+    async function buscarNombre() {
+      const cedula = document.getElementById('cedula').value.trim();
+      const nombre = document.getElementById('nombre');
+      nombre.value = '';
+
+      if (!cedula) return;
+
+      try {
+        const res = await fetch('/personal/cedula/' + cedula);
+        if (!res.ok) throw new Error('No encontrado');
+        const datos = await res.json();
+        nombre.value = datos.nombresapellidos || 'No encontrado';
+      } catch (err) {
+        nombre.value = 'No encontrado';
+      }
+    }
+
     async function actualizarUsuario() {
       const cedula = document.getElementById('cedula').value.trim();
+      const nombre = document.getElementById('nombre').value.trim();
       const rol = document.getElementById('rol').value;
       const estatus = document.getElementById('estatus').value;
       const mensaje = document.getElementById('mensaje');
       mensaje.textContent = '';
 
-      if (!cedula || !rol || !estatus) {
+      if (!cedula || !rol || !estatus || !nombre || nombre === 'No encontrado') {
         mensaje.textContent = '❌ Complete todos los campos correctamente.';
         mensaje.style.color = 'red';
         return;
       }
 
       try {
-        const res = await fetch('/usuarios/actualizar/' + cedula, {
-          method: 'PUT',
+        const res = await fetch('/registro-usuario', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rol, estatus })
+          body: JSON.stringify({ cedula, rol, estatus })
         });
 
         if (res.ok) {
           mensaje.textContent = '✅ Usuario actualizado correctamente.';
           mensaje.style.color = 'green';
-          document.getElementById('actualizar-form').reset();
+          document.getElementById('registro-form').reset();
+          document.getElementById('nombre').value = '';
         } else {
           const err = await res.json();
           mensaje.textContent = `❌ ${err.error || 'Error al actualizar usuario'}`;
