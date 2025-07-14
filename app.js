@@ -263,13 +263,11 @@ app.get('/instituciones/:id', async (req, res) => {
 // ─── 🔍 Buscar Director 
 app.get('/directores/buscar', async (req, res) => {
   const texto = req.query.q;
-  if (!texto || texto.length < 2) {
-    return res.json([]);
-  }
+  if (!texto || texto.length < 2) return res.json([]);
 
   const { data, error } = await supabase
     .from('personal')
-    .select('cedula, nombresapellidos')
+    .select('cedula, nombresapellidos, telefono, correo')
     .ilike('cedula', `%${texto}%`)
     .or(`nombresapellidos.ilike.%${texto}%`)
     .eq('rol', 'director')

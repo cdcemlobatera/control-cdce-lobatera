@@ -156,15 +156,14 @@ async function sugerirDirector() {
 }
 
 function buscarDirectoresSugeridos(texto) {
-  const lista = document.getElementById('listaSugerenciasDirector');
-  if (texto.length < 3) {
-    lista.innerHTML = '';
-    return;
-  }
+  console.log('Texto de entrada:', texto); // ➜ Verifica qué llega desde el input
 
   fetch(`/directores/buscar?q=${encodeURIComponent(texto)}`)
     .then(res => res.json())
     .then(data => {
+      console.log('Resultado:', data); // ➜ Muestra si llegan resultados
+
+      const lista = document.getElementById('listaSugerenciasDirector');
       lista.innerHTML = '';
       data.forEach(director => {
         const item = document.createElement('li');
@@ -175,7 +174,6 @@ function buscarDirectoresSugeridos(texto) {
     })
     .catch(err => {
       console.error('Error al sugerir directores:', err);
-      lista.innerHTML = '<li>Error al cargar sugerencias</li>';
     });
 }
 
