@@ -180,8 +180,8 @@ function buscarDirectoresSugeridos(texto) {
 function seleccionarDirector(director) {
   document.getElementById('ceduladirector').value = director.cedula || '';
   document.getElementById('nombredirector').value = director.nombresapellidos || '';
-  document.getElementById('telefonodirector').value = director.telefono || '';
-  document.getElementById('correodirector').value = director.correo || '';
+  document.getElementById('telefonodirector').value = director.telefono || '—';
+  document.getElementById('correodirector').value = director.correo || '—';
   document.getElementById('mensajeDirector').textContent = '✅ Director seleccionado correctamente';
   document.getElementById('listaSugerenciasDirector').innerHTML = '';
 }
