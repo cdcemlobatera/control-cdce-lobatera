@@ -456,6 +456,9 @@ window.cerrarFormulario = cerrarFormulario;
 window.editar = editar;
 window.cargarCircuitos = cargarCircuitos;
 window.cargarCircuitosFiltro = cargarCircuitosFiltro;
+window.buscarDirectoresSugeridos = buscarDirectoresSugeridos;
+window.seleccionarDirector = seleccionarDirector;
+
 
 // 🔹 FUNCIÓN GLOBAL PARA ELIMINAR INSTITUCIÓN
 
