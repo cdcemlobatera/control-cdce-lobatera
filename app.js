@@ -265,21 +265,27 @@ app.get('/directores/buscar', async (req, res) => {
   const texto = req.query.q;
   if (!texto || texto.length < 2) return res.json([]);
 
-  const { data, error } = await supabase
-    .from('personal')
-    .select('cedula, nombresapellidos, telefono, correo')
-    .ilike('cedula', `%${texto}%`)
-    //.or(`cedula.ilike.%${texto}%,nombresapellidos.ilike.%${texto}%`) // ANTERIOR
-    .or(`cedula.like.%${texto}%,nombresapellidos.like.%${texto}%`)
-    .eq('rol', 'director')
-    .limit(10);
+  try {
+    const { data, error } = await supabase
+      .from('personal')
+      .select('cedula, nombresapellidos, telefono, correo')
+      .textSearch('nombresapellidos', texto, {
+        type: 'websearch',
+        config: 'english' // Opcional, según tu configuración regional
+      })
+      .eq('rol', 'director')
+      .limit(10);
 
-  if (error) {
-    console.error('Error al buscar sugerencias de directores:', error);
-    return res.status(500).json({ error: 'Error al buscar sugerencias' });
+    if (error) {
+      console.error('🔴 Error en búsqueda:', error);
+      return res.status(500).json({ error: 'Error al buscar sugerencias' });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Fallo general al buscar director:', err);
+    res.status(500).json({ error: 'Fallo inesperado' });
   }
-
-  res.json(data);
 });
 
 //🔍 Buscar Director por cedula
