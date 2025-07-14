@@ -120,34 +120,6 @@ max-height: 90vh; overflow-y: auto;">
         <input type="text" id="nombreplantel" name="nombreplantel" placeholder="Requerido">
         <span id="mensajeNombre" class="mensaje-validacion"></span>
 
-        <!-- 🔍 Sugerencia de director -->
-        <label>Cédula del Director *:</label>
-        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()"
-          onblur="buscarDirector()" list="listaDirectores" autocomplete="off" placeholder="Ej. V12345678">
-        <datalist id="listaDirectores"></datalist>
-        <span id="mensajeDirector" class="mensaje-validacion"></span>
-
-        <!-- 📋 Datos referenciales del director -->
-        <fieldset disabled class="fieldset-lectura">
-          <legend>
-            <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
-          </legend>
-
-          <label for="nombredirector">Nombre:</label>
-          <input id="nombredirector" type="text" class="lectura" readonly>
-
-          <label for="telefonodirector">Teléfono:</label>
-          <input id="telefonodirector" type="text" class="lectura" readonly>
-
-          <label for="correodirector">Correo:</label>
-          <input id="correodirector" type="email" class="lectura" readonly>
-
-          <p class="mensaje-informativo">
-            📌 Estos datos provienen del registro del personal y se actualizan desde la sección
-            <strong>“Personal”</strong>.
-          </p>
-        </fieldset>
-
         <label>Eponimo Anterior:</label>
         <input type="text" id="eponimoanterior" name="eponimoanterior" placeholder="No Aplica">
 
@@ -207,6 +179,52 @@ max-height: 90vh; overflow-y: auto;">
         <div class="detalle-info">
           <p id="detalleSupervisor"></p>
         </div>
+
+        <!-- 🔍 Sugerencia de director -->
+        <label>Cédula del Director *:</label>
+        <input type="text" id="ceduladirector" name="ceduladirector" oninput="sugerirDirector()"
+          onblur="buscarDirector()" list="listaDirectores" autocomplete="off" placeholder="Ej. V12345678">
+        <datalist id="listaDirectores"></datalist>
+        <span id="mensajeDirector" class="mensaje-validacion"></span>
+
+        <!-- 📋 Busqueda del Director -->
+
+        <fieldset>
+          <legend>🔍 Buscar director por nombre o cédula parcial</legend>
+          <input type="text" id="busquedaDirector" placeholder="Ej. Aldo, V12..." autocomplete="off"
+            oninput="buscarDirectoresSugeridos(this.value)" />
+          <ul id="listaSugerenciasDirector" class="lista-sugerencias"></ul>
+        </fieldset>
+
+        <!-- 📋 Datos referenciales del director -->
+        <fieldset disabled class="fieldset-lectura">
+          <legend>
+            <i class="fa fa-user" aria-hidden="true"></i> Datos del Director <small>(referencia)</small>
+          </legend>
+
+          <fieldset>
+            <legend>📋 Datos del Director</legend>
+
+            <label for="ceduladirector">Cédula:</label>
+            <input id="ceduladirector" type="text" readonly />
+
+            <label for="nombredirector">Nombre:</label>
+            <input id="nombredirector" type="text" readonly />
+
+            <label for="telefonodirector">Teléfono:</label>
+            <input id="telefonodirector" type="text" readonly />
+
+            <label for="correodirector">Correo:</label>
+            <input id="correodirector" type="email" readonly />
+
+            <span id="mensajeDirector" class="info-director"></span>
+          </fieldset>
+
+          <p class="mensaje-informativo">
+            📌 Estos datos provienen del registro del personal y se actualizan desde la sección
+            <strong>“Personal”</strong>.
+          </p>
+        </fieldset>
 
         <label for="codestadistico">Código Estadístico</label>
         <input type="text" id="codestadistico" name="codestadistico" placeholder="De poseer código estadístico">
